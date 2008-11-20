@@ -1,0 +1,23 @@
+11/20/2008
+
+Turtle Geometry
+
+Enhancements:
+
+  - Implement wrapping
+
+  - Mouseover turtlegraphics area should display coordinates
+  - Editor view should have a status bar with editor caret position information
+
+  - Multiple editors (tabbed pane)
+
+  - Ability to name and hatch turtles
+  - Add ability to set runspeed (animate)
+  - Add ability to drag a turtle to another position (calls setpos)
+
+  - Add "Recent documents" submenu or items
+  - Replace the kturtle icon with a unique one
+
+  - Example:  instead of exposing commands setpencolor/showpencolor, expose the property
+     "pencolor".  then can just say "pencolor = red" or "println pencolor"
+
