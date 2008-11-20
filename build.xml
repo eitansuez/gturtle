@@ -1,0 +1,60 @@
+<project name="GTurtle" default="run">
+
+ <description>Contact Manager Demo Application</description>
+
+ <property name="build.classes.dir" value="out" />
+ <property name="src.dir" location="src" />
+ <property name="lib.dir" location="lib" />
+ <property name="dist.dir" value="dist" />
+
+ <property name="main.class" value="gturtle.TurtleConsole" />
+ <property environment="env"/>
+    
+ <path id="class.path">
+   <fileset dir="${lib.dir}" includes="**/*.jar" />
+   <pathelement location="${build.classes.dir}" />
+   <fileset dir="${env.GROOVY_HOME}/embeddable" includes="*.jar" />
+ </path>
+
+ <target name="init">
+   <tstamp />
+   <mkdir dir="${build.classes.dir}" />
+   <mkdir dir="${dist.dir}" />
+ </target>
+
+ <target name="clean">
+   <delete dir="${build.classes.dir}" />
+   <delete dir="${dist.dir}" />
+ </target>
+
+ <target name="compile" description="compile code" depends="init">
+   <taskdef name="groovyc"
+            classname="org.codehaus.groovy.ant.Groovyc"
+            classpathref="class.path" />
+
+   <groovyc srcdir="${src.dir}" destdir="${build.classes.dir}"
+            classpathref="class.path">
+     <javac debug="on" deprecation="on" target="1.5" />
+   </groovyc>
+    
+   <copy todir="${build.classes.dir}">
+      <fileset dir="${src.dir}" includes="**/*.png" />
+   </copy>
+ </target>
+ 
+ <target name="run" description="run app" depends="compile">
+   <java classname="${main.class}" classpathref="class.path" 
+         fork="true" maxmemory="192m" />
+ </target>
+
+ <target name="jar" description="jar it" depends="clean,compile">
+   <jar file="${dist.dir}/${ant.project.name}.jar">
+     <manifest>
+       <attribute name="Created-By" value="Eitan Suez" />
+       <attribute name="Main-Class" value="${main.class}" />
+     </manifest>
+     <fileset dir="${build.classes.dir}" includes="**/*" />
+   </jar>
+ </target>
+
+</project>
