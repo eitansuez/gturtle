@@ -2,17 +2,27 @@
 
 Turtle Geometry
 
-Enhancements:
+Issues:
+  - Console sometimes stops outputing content (println's don't work)
+  - Program sometimes stops responding.  Guessing that GroovyShell might need to be replaced
+     perhaps after an exception takes place.
+  - Don't like jsyntaxpane editor.  Try to use the one that groovyConsole uses
 
-  - Implement wrapping
+  - If program does not end, no drawing takes place.  Instead,
+     periodically yield to the drawing thread, perhaps once every
+     100 elements added to the array.
+  - Provide a way to stop / interrupt the evaluation thread from the GUI
+
+Enhancements:
+  - Add ability to set runspeed (animate drawing)
 
   - Mouseover turtlegraphics area should display coordinates
+  - Turtle area should optionally draw x/y axes and coordinate grid
   - Editor view should have a status bar with editor caret position information
 
   - Multiple editors (tabbed pane)
 
   - Ability to name and hatch turtles
-  - Add ability to set runspeed (animate)
   - Add ability to drag a turtle to another position (calls setpos)
 
   - Add "Recent documents" submenu or items

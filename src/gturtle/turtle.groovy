@@ -137,8 +137,10 @@ class MainPane extends JPanel
     scriptEditor.setContentType("text/groovy")
     scriptEditor.setFont(new Font("sansserif", Font.PLAIN, 12))
 
-    GSwing.doLater { setScriptText(initText) } // doesn't work otherwise.
-    GSwing.doLater { setupAboutDlg() }
+    GSwing.doLater {
+      setScriptText(initText)
+      GSwing.doLater { setupAboutDlg() }
+    }
   }
 
 
@@ -403,48 +405,33 @@ class TurtleCanvas extends JComponent
 
     State s1 = states.first()
     states.tail().each { State s2 ->
-
-      TVector s2_wrapped = wrap(s2.v)
-
       if (s2.pendown)
       {
         g2.setColor(s2.pencolor)
         g2.setStroke(new BasicStroke(s2.pensize))
-
         g2.drawLine((int) s1.v.x, (int) s1.v.y, (int) s2.v.x, (int) s2.v.y)
-        if (s2_wrapped != s2.v)
-        {
-          println "right"
-          TVector s1_wrapped = wrap(s1.v)
-          g2.drawLine((int) s1_wrapped.x, (int) s1_wrapped.y, (int) s2_wrapped.x, (int) s2_wrapped.y)
-        }
       }
       s1 = s2
-      if (s2_wrapped != s2.v)
-      {
-        s1.v = s2_wrapped
-      }
     }
 
-    // draw sprite
     drawHeadingIndicator(g2)
   }
 
   Stroke tris = new BasicStroke(1.0f)
   void drawHeadingIndicator(Graphics2D g2)
   {
-    // for now triangle rotated
-    g2.setColor(Color.black)
-    g2.setStroke(tris)
-
     double theta = heading_rads()
     TVector lastPos = states.last().v
     g2.translate(lastPos.x, lastPos.y)
     g2.rotate(theta)
 
+    // originally a triangle indicated heading:
+//    g2.setColor(Color.black)
+//    g2.setStroke(tris)
 //    g2.drawLine(0, -6, 0, 6)
 //    g2.drawLine(0, 6, 24, 0)
 //    g2.drawLine(24, 0, 0, -6)
+    // now..
     g2.rotate(Math.PI/2)
     g2.drawImage(turtlesprite.getImage(), (int) (-turtlesprite.getIconWidth()/2.0), (int) (-turtlesprite.getIconHeight()/2.0), null)
     g2.rotate(-Math.PI/2)
@@ -487,25 +474,28 @@ class TurtleCanvas extends JComponent
   void fd(double distance)
   {
     state.v = states.last().v + (heading_v * distance)
-    states << new State(v: state.v, pendown: state.pendown, pencolor: state.pencolor, pensize: state.pensize)
+
+    if (wrapOn)
+    {
+      wrap(states.last().v, state.v)
+    }
+    else
+    {
+      states << new State(v: state.v, pendown: state.pendown, pencolor: state.pencolor, pensize: state.pensize)
+    }
   }
-  protected TVector wrap(TVector v)
+
+  protected void wrap(TVector v1, TVector v2)
   {
-    double bx = getWidth() / 2.0
-    double by = getHeight() / 2.0
-    
-    // 1. translate:
-    double x = v.x + bx
-    double y = v.y + by
-    // 2. wrap
-    x %= getWidth()
-    y %= getHeight()
-    // 3. translate back
-    x -= bx
-    y -= by
-    
-    return new TVector(x: x, y: y)
+    states << new State(v: v2, pendown: state.pendown, pencolor: state.pencolor, pensize: state.pensize)
+    TVector screen = new TVector(x: getWidth(), y: getHeight())
+    TVector nextV = (v2.translate(250) % screen).translate(-250)
+    TVector p = nextV - (v2 - v1)
+    setPos(p.x, p.y)
+    states << new State(v: nextV, pendown: state.pendown, pencolor: state.pencolor, pensize: state.pensize)
   }
+
+  protected TVector translate
   
   void bk(double distance) { fd(-distance) }
   void lt(double angleDegrees)
@@ -562,9 +552,20 @@ class TVector
   double x, y
   double length() { Math.sqrt(x*x + y*y) }
   TVector plus(TVector v) { new TVector(x: x+v.x, y: y+v.y) }
+  TVector minus(TVector v) { new TVector(x: x-v.x, y: y-v.y) }
+
+  TVector mod(TVector v)
+  {
+    TVector newV = new TVector(x: x % v.x, y: y % v.y)
+    if (newV.x < 0) newV.x += v.x  // expect -3 % 10 to return 7, not -3
+    if (newV.y < 0) newV.y += v.y
+    newV
+  }
+
   TVector multiply(double k) { new TVector(x: k*x, y: k*y) }
   TVector rotate(double angle) { (this * Math.cos(angle)) + (perp() * Math.sin(angle)) }
   TVector perp() { new TVector(x: -y, y: x) }
+  TVector translate(double amt) { new TVector(x: x + amt, y: y+amt) }
 
   public boolean equals(Object obj)
   {
