@@ -17,8 +17,6 @@ Enhancements:
   - Turtle area should optionally draw x/y axes and coordinate grid
   - Editor view should have a status bar with editor caret position information
 
-  - Multiple editors (tabbed pane)
-
   - Ability to name and hatch turtles
   - Add ability to drag a turtle to another position (calls setpos)
 
