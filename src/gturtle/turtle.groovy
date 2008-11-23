@@ -261,7 +261,7 @@ class MainPane extends JPanel
     })
     def runSelectedAction = new GAction("Run Selection", KeyEvent.VK_E, KeyStroke.getKeyStroke(KeyEvent.VK_R, KeyEvent.CTRL_MASK
             + KeyEvent.SHIFT_MASK), {
-      execute(currentScriptEditor.getSelectedText())
+      execute(currentScriptEditor().getSelectedText())
     })
 
     JMenu scriptMenu = new JMenu("Script")
