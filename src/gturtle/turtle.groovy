@@ -483,6 +483,11 @@ class TurtleCanvas extends JComponent
     {
       states << new State(v: state.v, pendown: state.pendown, pencolor: state.pencolor, pensize: state.pensize)
     }
+
+    if (states.size() % 100 == 0)
+    {
+      repaint()
+    }
   }
 
   protected void wrap(TVector v1, TVector v2)

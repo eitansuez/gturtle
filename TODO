@@ -8,9 +8,6 @@ Issues:
      perhaps after an exception takes place.
   - Don't like jsyntaxpane editor.  Try to use the one that groovyConsole uses
 
-  - If program does not end, no drawing takes place.  Instead,
-     periodically yield to the drawing thread, perhaps once every
-     100 elements added to the array.
   - Provide a way to stop / interrupt the evaluation thread from the GUI
 
 Enhancements:
