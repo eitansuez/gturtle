@@ -156,7 +156,7 @@ class MainPane extends JPanel
     new Thread({
       try
       {
-        turtleCanvas.execute(currentScriptEditor().getText())
+        turtleCanvas.execute(text)
       }
       finally
       {
