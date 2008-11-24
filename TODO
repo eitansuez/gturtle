@@ -10,7 +10,6 @@ Issues:
   - Provide a way to stop / interrupt the evaluation thread from the GUI
 
 Enhancements:
-  - Add ability to drag a turtle to another position (calls setpos)
   - Add ability to set runspeed (animate drawing)
 
   - Don't like jsyntaxpane editor.  Use jEdit's.

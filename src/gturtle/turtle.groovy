@@ -395,7 +395,7 @@ class State
 }
 
 
-class TurtleCanvas extends JComponent
+class TurtleCanvas extends JComponent implements MouseListener, MouseMotionListener
 {
 
   static ImageIcon turtlesprite, bugsprite;
@@ -419,7 +419,47 @@ class TurtleCanvas extends JComponent
     heading_v = new TVector(x: 0, y: 1)
     reset()
     newShell()
+    setupTurtleDraggable()
   }
+
+  void setupTurtleDraggable()
+  {
+    addMouseListener(this)
+    addMouseMotionListener(this) 
+  }
+
+  boolean indragmode = false
+  public void mouseClicked(MouseEvent e) { }
+  public void mousePressed(MouseEvent e)
+  {
+    int w = bugsprite.getIconWidth()
+    int h = bugsprite.getIconHeight()
+    TVector pos = getPos();
+    Point translated = new Point((int) (pos.x+250), (int) (-pos.y+250))
+    Rectangle spriteSpace = new Rectangle((int) (translated.x-w/2), (int) (translated.y-h/2), w, h)
+    if (spriteSpace.contains(e.getPoint()))
+    {
+      indragmode = true
+    }
+  }
+  public void mouseReleased(MouseEvent e)
+  {
+    indragmode = false
+  }
+  public void mouseDragged(MouseEvent e)
+  {
+    if (indragmode)
+    {
+      Point converted = new Point((int) (e.getX()-250), (int) ((e.getY()-250)*-1))
+      setPos(converted.x, converted.y)
+      repaint()
+    }
+  }
+  public void mouseEntered(MouseEvent e) { }
+  public void mouseExited(MouseEvent e) { }
+  public void mouseMoved(MouseEvent e) { }
+
+
 
   void reset()
   {
