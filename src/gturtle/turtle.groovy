@@ -441,7 +441,9 @@ class TurtleCanvas extends JComponent
             "setpenup" : this.&setPenDown.curry(false),
             "ispendown" : this.state.pendown,
 
-            "show" : this.&show
+            "show" : this.&show,
+            "setgridon" : this.&setGridOn.curry(true),
+            "setgridoff" : this.&setGridOn.curry(false)
     ]
     bindings.each { entry ->
       context.setProperty(entry.key, entry.value)
@@ -487,6 +489,11 @@ class TurtleCanvas extends JComponent
     g2.translate(250, 250)
     g2.scale(1.0, -1.0)
 
+    if(gridOn)
+    {
+      drawCoordinateGrid(g2)
+    }
+    
     State s1 = states.first()
     states.tail().each { State s2 ->
       if (s2.pendown)
@@ -501,7 +508,37 @@ class TurtleCanvas extends JComponent
     drawHeadingIndicator(g2)
   }
 
-  Stroke tris = new BasicStroke(1.0f)
+  boolean gridOn = true
+  void setGridOn(boolean on)
+  {
+    this.gridOn = on
+    repaint()
+  }
+
+  Stroke thinStroke = new BasicStroke(0.5f)
+  Stroke minorStroke = new BasicStroke(1.0f)
+  
+  void drawCoordinateGrid(Graphics2D g2)
+  {
+    Color lineColor = new Color(0x85, 0x96, 0xCB, 0x80)
+    Color axisColor = new Color(0xCD, 0x51, 0x5C, 0x80)
+    int minorStep = 50
+    (-240..240).step(10, { int i ->
+      if (i==0)
+      {
+        g2.setColor(axisColor)
+      }
+      else
+      {
+        g2.setColor(lineColor)
+      }
+      boolean minor = (i % minorStep == 0)
+      g2.setStroke(minor ? minorStroke : thinStroke)
+      g2.drawLine(i, -250, i, 250)
+      g2.drawLine(-250, i, 250, i)
+    })
+  }
+
   void drawHeadingIndicator(Graphics2D g2)
   {
     double theta = heading_rads()
@@ -509,13 +546,6 @@ class TurtleCanvas extends JComponent
     g2.translate(lastPos.x, lastPos.y)
     g2.rotate(theta)
 
-    // originally a triangle indicated heading:
-//    g2.setColor(Color.black)
-//    g2.setStroke(tris)
-//    g2.drawLine(0, -6, 0, 6)
-//    g2.drawLine(0, 6, 24, 0)
-//    g2.drawLine(24, 0, 0, -6)
-    // now..
     g2.rotate(Math.PI/2)
     g2.drawImage(turtlesprite.getImage(), (int) (-turtlesprite.getIconWidth()/2.0), (int) (-turtlesprite.getIconHeight()/2.0), null)
     g2.rotate(-Math.PI/2)

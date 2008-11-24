@@ -4,24 +4,24 @@ Turtle Geometry
 
 Issues:
   - println's don't work or don't work reliably
-
-  - Don't like jsyntaxpane editor.  Use jEdit's.
-  - Ditto for the file chooser: user jEdit's.
-  - Idea:  why not implement GTurtle as a jEdit plugin?
-
+  - each editor should have its own shell / context
   - Program sometimes stops responding.  Guessing that GroovyShell might need to be replaced
      perhaps after an exception takes place.
   - Provide a way to stop / interrupt the evaluation thread from the GUI
 
 Enhancements:
+  - Add ability to drag a turtle to another position (calls setpos)
+
+  - Don't like jsyntaxpane editor.  Use jEdit's.
+  - Ditto for the file chooser: user jEdit's.
+  - Idea:  why not implement GTurtle as a jEdit plugin?
+
   - Add ability to set runspeed (animate drawing)
 
   - Mouseover turtlegraphics area should display coordinates
-  - Turtle area should optionally draw x/y axes and coordinate grid
   - Editor view should have a status bar with editor caret position information
 
   - Ability to name and hatch turtles
-  - Add ability to drag a turtle to another position (calls setpos)
 
   - Add "Recent documents" submenu or items
   - Replace the kturtle icon with a unique one
