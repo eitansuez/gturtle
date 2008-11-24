@@ -498,7 +498,10 @@ class TurtleCanvas extends JComponent implements MouseListener, MouseMotionListe
 
             "show" : this.&show,
             "setgridon" : this.&setGridOn.curry(true),
-            "setgridoff" : this.&setGridOn.curry(false)
+            "setgridoff" : this.&setGridOn.curry(false),
+
+            "setwrapon" : this.&setWrapOn.curry(true),
+            "setwrapoff" : this.&setWrapOn.curry(false)
     ]
     bindings.each { entry ->
       context.setProperty(entry.key, entry.value)
@@ -639,7 +642,11 @@ class TurtleCanvas extends JComponent implements MouseListener, MouseMotionListe
   }
 
   boolean wrapOn = true
-  
+  void setWrapOn(boolean on)
+  {
+    this.wrapOn = on
+  }
+
   // commands:
   void show(Object o)
   {
