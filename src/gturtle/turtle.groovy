@@ -98,31 +98,19 @@ class MainPane extends JPanel
   TurtleCanvas turtleCanvas
   JSlider speedSlider
   def editorFileMap = [:]
+  JDialog aboutDlg
+  TurtleConsole frame
+  JFileChooser chooser = new JFileChooser(System.getProperty("user.dir"))
 
   static String initText = "5.times { fd 100; rt 144 }\n"
 
-  TurtleConsole frame
-  JFileChooser chooser = new JFileChooser(System.getProperty("user.dir"))
 
   MainPane(TurtleConsole container)
   {
     frame = container;
-    setupMenuBar()
     setLayout(new BorderLayout())
 
-    editorTabs = new JTabbedPane()
-    editorTabs.setPreferredSize(new Dimension(450, 500))
-
-    editorTabs.addChangeListener({ ChangeEvent evt ->
-      if (editorTabs.getTabCount() == 0)
-      {
-        frame.clearTitle()
-        return;
-      }
-      String text = editorTabs.getTitleAt(editorTabs.getSelectedIndex())
-      frame.appendTitle(text)
-    } as ChangeListener) 
-    
+    setupEditorTabs()
     turtleCanvas = new TurtleCanvas()
     JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, editorTabs, turtleCanvas)
 
@@ -130,6 +118,8 @@ class MainPane extends JPanel
     new ConsolePiper(cPane).pipeStreams()
     JSplitPane topSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, splitPane, new JScrollPane(cPane))
     add(topSplitPane, BorderLayout.CENTER)
+
+    setupMenuBar()
 
     // work in progress:
     def slidePane = new JPanel()
@@ -149,6 +139,22 @@ class MainPane extends JPanel
       newFile()
 //      setScriptText(initText)
     }
+  }
+
+  void setupEditorTabs()
+  {
+    editorTabs = new JTabbedPane()
+    editorTabs.setPreferredSize(new Dimension(450, 500))
+
+    editorTabs.addChangeListener({ ChangeEvent evt ->
+      if (editorTabs.getTabCount() == 0)
+      {
+        frame.clearTitle()
+        return;
+      }
+      String text = editorTabs.getTitleAt(editorTabs.getSelectedIndex())
+      frame.appendTitle(text)
+    } as ChangeListener)
   }
 
   void execute(String text)
@@ -265,10 +271,17 @@ class MainPane extends JPanel
       execute(currentScriptEditor().getSelectedText())
     })
 
+    def decreaseFontAction = new GAction("Decrease font", KeyEvent.VK_I,
+      KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, KeyEvent.CTRL_MASK), this.&changeFontSize.curry(false))
+    def increaseFontAction = new GAction("Increase font", KeyEvent.VK_D,
+      KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, KeyEvent.CTRL_MASK), this.&changeFontSize.curry(true))
+
     JMenu scriptMenu = new JMenu("Script")
     scriptMenu.setMnemonic('S' as char)
     scriptMenu.add(runScriptAction)
     scriptMenu.add(runSelectedAction)
+    scriptMenu.add(decreaseFontAction)
+    scriptMenu.add(increaseFontAction)
 
     def clearConsoleAction = new GAction("Clear Console", KeyEvent.VK_C,
             KeyStroke.getKeyStroke(KeyEvent.VK_K, KeyEvent.CTRL_MASK), {
@@ -279,6 +292,12 @@ class MainPane extends JPanel
     outputMenu.setMnemonic('O' as char)
     outputMenu.add(clearConsoleAction)
 
+    def newShellAction = new GAction("New Shell", KeyEvent.VK_N, null, turtleCanvas.&newShell)
+
+    JMenu debugMenu = new JMenu("Debug")
+    debugMenu.setMnemonic('D' as char)
+    debugMenu.add(newShellAction)
+    
     def aboutAction = new GAction("About GTurtle", KeyEvent.VK_A, null, {
       aboutDlg.setVisible(true)
             })
@@ -291,11 +310,19 @@ class MainPane extends JPanel
     menuBar.add(fileMenu)
     menuBar.add(scriptMenu)
     menuBar.add(outputMenu)
+    menuBar.add(debugMenu)
     menuBar.add(helpMenu)
     frame.setJMenuBar(menuBar)
   }
 
-  JDialog aboutDlg
+  void changeFontSize(boolean up)
+  {
+    Font currentFont = currentScriptEditor().getFont()
+    float newSize = currentFont.size + (up ? 1 : -1) 
+    Font font = currentFont.deriveFont(newSize)
+    currentScriptEditor().setFont(font)
+  }
+
   void setupAboutDlg()
   {
     def builder = new groovy.swing.SwingBuilder()
@@ -376,7 +403,7 @@ class TurtleCanvas extends JComponent
   {
     heading_v = new TVector(x: 0, y: 1)
     reset()
-    setupShell()
+    newShell()
   }
 
   void reset()
@@ -387,7 +414,7 @@ class TurtleCanvas extends JComponent
     setHeading(90) 
   }
 
-  void setupShell()
+  void newShell()
   {
     def context = new Binding()
     Map bindings = [
@@ -412,27 +439,33 @@ class TurtleCanvas extends JComponent
             
             "setpendown" : this.&setPenDown.curry(true),
             "setpenup" : this.&setPenDown.curry(false),
-            "ispendown" : this.state.pendown
+            "ispendown" : this.state.pendown,
+
+            "show" : this.&show
     ]
     bindings.each { entry ->
       context.setProperty(entry.key, entry.value)
     }
     shell = new GroovyShell(context)
+    System.out.println("[new groovy shell created]")
   }
 
   void setPenDown(boolean down)
   {
     state.pendown = down
+    System.out.println("[ok, pen is ${state.pendown ? 'down' : 'up'}]")
   }
   
   void setPenColor(Color color)
   {
     state.pencolor = color
+    System.out.println("[ok, pencolor is: ${state.pencolor}]")
   }
 
   void setPenSize(float value)
   {
     state.pensize = value
+    System.out.println("[ok, pensize is: ${state.pensize}]")
   }
 
   boolean delaySet = false
@@ -522,6 +555,11 @@ class TurtleCanvas extends JComponent
   boolean wrapOn = true
   
   // commands:
+  void show(Object o)
+  {
+    System.out.println o.toString()
+  }
+  
   void fd(double distance)
   {
     state.v = states.last().v + (heading_v * distance)

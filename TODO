@@ -3,11 +3,12 @@
 Turtle Geometry
 
 Issues:
+  - println's don't work or don't work reliably
+
   - Don't like jsyntaxpane editor.  Use jEdit's.
   - Ditto for the file chooser: user jEdit's.
   - Idea:  why not implement GTurtle as a jEdit plugin?
 
-  - Console sometimes stops outputing content (println's don't work)
   - Program sometimes stops responding.  Guessing that GroovyShell might need to be replaced
      perhaps after an exception takes place.
   - Provide a way to stop / interrupt the evaluation thread from the GUI
