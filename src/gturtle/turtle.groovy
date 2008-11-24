@@ -2,7 +2,7 @@ package gturtle
 
 import javax.swing.*
 import java.awt.*
-import static java.awt.RenderingHints.*;
+import static java.awt.RenderingHints.*
 import java.awt.event.*
 import jsyntaxpane.DefaultSyntaxKit
 import javax.swing.event.ChangeListener
