@@ -17,7 +17,7 @@ Enhancements:
   - Idea:  why not implement GTurtle as a jEdit plugin?
   - Add "Recent documents" submenu or items
 
-  - Mouseover turtlegraphics area should display coordinates
+  - Mouseover turtlegraphics area should display coordinates (as tooltip?)
   - Editor view should have a status bar with editor caret position information
 
   - Ability to name and hatch turtles

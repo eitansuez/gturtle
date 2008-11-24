@@ -136,7 +136,7 @@ class MainPane extends JPanel
     GSwing.doLater {
       setupAboutDlg()
       newFile()
-//      setScriptText(initText)
+      setScriptText(initText)
     }
   }
 
