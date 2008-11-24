@@ -2,6 +2,7 @@ package gturtle
 
 import javax.swing.*
 import java.awt.*
+import static java.awt.RenderingHints.*;
 import java.awt.event.*
 import jsyntaxpane.DefaultSyntaxKit
 import javax.swing.event.ChangeListener
@@ -161,7 +162,7 @@ class MainPane extends JPanel
       finally
       {
         GSwing.doLater {
-          currentScriptEditor().requestFocus()
+          currentScriptEditor().requestFocusInWindow()
           frame.setCursor(getPredefinedCursor(DEFAULT_CURSOR))
         }
       }
@@ -306,7 +307,7 @@ class MainPane extends JPanel
               label('GTurtle, by Eitan Suez (eitan.suez@gmail.com)')
               button(text: 'Ok', actionPerformed: {
                 aboutDlg.setVisible(false)
-                currentScriptEditor().requestFocus()
+                currentScriptEditor().requestFocusInWindow()
               })
             }
     ((JComponent) aboutDlg.getContentPane()).setBorder(new EmptyBorder(10,10,10,10))
@@ -445,7 +446,7 @@ class TurtleCanvas extends JComponent
   protected void paintComponent(Graphics g)
   {
     Graphics2D g2 = (Graphics2D) g
-    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+    g2.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON)
 
     g2.setColor(Color.white)
     g2.fillRect(0, 0, getWidth()-1, getHeight()-1)
