@@ -385,11 +385,13 @@ class State
 class TurtleCanvas extends JComponent
 {
 
-  static ImageIcon turtlesprite;
+  static ImageIcon turtlesprite, bugsprite;
   static {
     ClassLoader loader = Thread.currentThread().getContextClassLoader()
     URL url = loader.getResource("gturtle/kturtle.png")
+    URL bugurl = loader.getResource("gturtle/bug_red.png")
     turtlesprite = new ImageIcon(url)
+    bugsprite = new ImageIcon(bugurl)
   }
 
 
@@ -547,7 +549,8 @@ class TurtleCanvas extends JComponent
     g2.rotate(theta)
 
     g2.rotate(Math.PI/2)
-    g2.drawImage(turtlesprite.getImage(), (int) (-turtlesprite.getIconWidth()/2.0), (int) (-turtlesprite.getIconHeight()/2.0), null)
+//    g2.drawImage(turtlesprite.getImage(), (int) (-turtlesprite.getIconWidth()/2.0), (int) (-turtlesprite.getIconHeight()/2.0), null)
+    g2.drawImage(bugsprite.getImage(), (int) (-bugsprite.getIconWidth()/2.0), (int) (-bugsprite.getIconHeight()/2.0), null)
     g2.rotate(-Math.PI/2)
 
     g2.rotate(-theta)
