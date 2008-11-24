@@ -243,7 +243,7 @@ class MainPane extends JPanel
       removeAssociation(editorTabs.getSelectedComponent())
       editorTabs.removeTabAt(editorTabs.getSelectedIndex())
     })
-    def quitAction = new GAction("Quit", KeyEvent.VK_X, KeyStroke.getKeyStroke(KeyEvent.VK_Q, KeyEvent.CTRL_MASK), {
+    def quitAction = new GAction("Exit", KeyEvent.VK_X, KeyStroke.getKeyStroke(KeyEvent.VK_Q, KeyEvent.CTRL_MASK), {
       System.exit(0)
     })
 
