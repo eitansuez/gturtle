@@ -97,7 +97,6 @@ class MainPane extends JPanel
   ConsolePane cPane
   TurtleCanvas turtleCanvas
   JSlider speedSlider
-  def editorFileMap = [:]
   JDialog aboutDlg
   TurtleConsole frame
   JFileChooser chooser = new JFileChooser(System.getProperty("user.dir"))
@@ -175,10 +174,20 @@ class MainPane extends JPanel
     }).start()
   }
 
-  void associateFileToEditor(Component c, File f) { editorFileMap[c] = f }
-  File fileForEditor(Component c) { editorFileMap[c] }
-  void removeAssociation(Component c) { editorFileMap.remove(c) }
-  
+  static String filepropertykey = "backingfile"
+  void associateFileToEditor(JComponent c, File f)
+  {
+    c.putClientProperty(filepropertykey, f)
+  }
+  File fileForEditor(JComponent c)
+  {
+    (File) c.getClientProperty(filepropertykey)
+  }
+  void removeAssociation(JComponent c)
+  {
+    c.putClientProperty(filepropertykey, null)
+  }
+
   def newFile() { addFileTab(null) }
 
   def addFileTab(File file)
@@ -192,10 +201,10 @@ class MainPane extends JPanel
 
     if (file != null)
     {
+      associateFileToEditor(container, file)
       setScriptText(file.getText())
     }
 
-    associateFileToEditor(container, file)
     setFocusOnEditor()
   }
 
@@ -218,7 +227,7 @@ class MainPane extends JPanel
       }
     })
     def saveAction = new GAction("Save", KeyEvent.VK_S, KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_MASK), {
-      File file = fileForEditor(editorTabs.getSelectedComponent())
+      File file = fileForEditor((JComponent) editorTabs.getSelectedComponent())
       if (file == null)
       {
         chooser.setDialogTitle("Save")
@@ -243,11 +252,11 @@ class MainPane extends JPanel
         File file = chooser.getSelectedFile()
         file.write(getScriptText())
         editorTabs.setTitleAt(editorTabs.getSelectedIndex(), file.getName());
-        associateFileToEditor(editorTabs.getSelectedComponent(), file)
+        associateFileToEditor((JComponent) editorTabs.getSelectedComponent(), file)
       }
     })
     def closeAction = new GAction("Close", KeyEvent.VK_C, KeyStroke.getKeyStroke(KeyEvent.VK_W, KeyEvent.CTRL_MASK), {
-      removeAssociation(editorTabs.getSelectedComponent())
+      removeAssociation((JComponent) editorTabs.getSelectedComponent())
       editorTabs.removeTabAt(editorTabs.getSelectedIndex())
     })
     def quitAction = new GAction("Exit", KeyEvent.VK_X, KeyStroke.getKeyStroke(KeyEvent.VK_Q, KeyEvent.CTRL_MASK), {
@@ -352,7 +361,11 @@ class MainPane extends JPanel
     return (JComponent) scrollPane.getViewport().getView()
   }
 
-  void setScriptText(String scriptText) { currentScriptEditor().setText(scriptText) }
+  void setScriptText(String scriptText)
+  {
+    GSwing.doLater { currentScriptEditor().setText(scriptText) }
+  }
+
   String getScriptText() { currentScriptEditor().getText() }
 
   // some magical recipe i discovered works for setting up JSyntaxPane

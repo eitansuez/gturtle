@@ -11,20 +11,17 @@ Issues:
 
 Enhancements:
   - Add ability to drag a turtle to another position (calls setpos)
+  - Add ability to set runspeed (animate drawing)
 
   - Don't like jsyntaxpane editor.  Use jEdit's.
   - Ditto for the file chooser: user jEdit's.
   - Idea:  why not implement GTurtle as a jEdit plugin?
-
-  - Add ability to set runspeed (animate drawing)
+  - Add "Recent documents" submenu or items
 
   - Mouseover turtlegraphics area should display coordinates
   - Editor view should have a status bar with editor caret position information
 
   - Ability to name and hatch turtles
-
-  - Add "Recent documents" submenu or items
-  - Replace the kturtle icon with a unique one
 
   - Example:  instead of exposing commands setpencolor/showpencolor, expose the property
      "pencolor".  then can just say "pencolor = red" or "println pencolor"

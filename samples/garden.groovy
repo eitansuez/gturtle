@@ -35,11 +35,11 @@ def randomcolor()
     int  blue = (int) (random() * 255)
     new java.awt.Color(red, green, blue)
 }
-def flowerhead(size, angle)
+def flowerhead(size, numpetals)
 {
     setpencolor(randomcolor())
-    int numtimes = 360/angle + 1
-    numtimes.times {
+    def angle = 360.0/numpetals
+    numpetals.times {
         petal(size)
         rt angle
     }
@@ -51,7 +51,7 @@ def pickrandompos()
     def y = random() * 200 - 250
     setpos(x,y)
 }
-def flower(size, angle)
+def flower(size, numpetals)
 {
     pickrandompos()
     int randnum = random() * 2
@@ -64,32 +64,38 @@ def flower(size, angle)
       steml(size)
     }
 
-    setpensize(2)
-    flowerhead(size, angle)
+    setpensize((float) (random() * 1.5 + 0.5))
+    flowerhead(size, numpetals)
     setheading(90)
+}
+
+def shadeofgreen()
+{
+    def g = (int) (random() * 155 + 100)
+    new java.awt.Color(0, g, 0)
 }
 
 def steml(size)
 {
-    setpencolor(green)
+    setpencolor(shadeofgreen())
     setpensize(3)
     arcl(size, 30)
     rt 30
 }
 def stemr(size)
 {
-    setpencolor(green)
+    setpencolor(shadeofgreen())
     setpensize(3)
     arcr(size, 30)
     lt 30
 }
 
-def garden(number)
+def garden(numflowers)
 {
-  number.times {
+  numflowers.times {
     def size = random() * 180 + 20
-    def angle = random() * 100 + 7
-    flower(size, angle)
+    def numpetals = (int) (random() * 15 + 3)
+    flower(size, numpetals)
   }
 }
 
