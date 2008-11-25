@@ -162,6 +162,8 @@ class MainPane extends JPanel
       settings.load(reader)
     }
     chooser = new JFileChooser()
+    chooser.setMultiSelectionEnabled(true) 
+
     String cwd = settings.getProperty("filesDir")
     if (cwd == null)
     {
@@ -296,8 +298,10 @@ class MainPane extends JPanel
     if (file != null)
     {
       associateFileToEditor(container, file)
-      setScriptText(file.getText())
-      addToRecentDocs(file) 
+      GSwing.doLater {
+        ((JEditorPane) scrollPaneContents(container)).setText(file.getText())
+      }
+      addToRecentDocs(file)
     }
 
     setFocusOnEditor()
@@ -316,9 +320,11 @@ class MainPane extends JPanel
       int choice = chooser.showOpenDialog(frame)
       if (choice == JFileChooser.APPROVE_OPTION)
       {
-        file = chooser.getSelectedFile()
-        rememberChooserDirectory(file)
-        addFileTab(file)
+        File[] files = chooser.getSelectedFiles()
+        files.each { File f ->
+          rememberChooserDirectory(f)
+          addFileTab(f)
+        }
       }
     }
     else
