@@ -1,7 +1,6 @@
-Nov 2008.
-Welcome.
+Nov 2008
 
-License:  GPLv3
+Welcome!
 
 Prerequisites
 -------------
@@ -10,7 +9,12 @@ b. Apache Ant
 c. Groovy 1.6beta2 (installed, with groovy_home env var set)
 
 To Run: type "ant"
+Check out the samples in the samples/ directory
 
+License:  GPLv3
+
+
+Thanks for checking out GTurtle!
 --
 Eitan Suez
 
