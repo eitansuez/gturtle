@@ -1,0 +1,16 @@
+Nov 2008.
+Welcome.
+
+License:  GPLv3
+
+Prerequisites
+-------------
+a. Java
+b. Apache Ant
+c. Groovy 1.6beta2 (installed, with groovy_home env var set)
+
+To Run: type "ant"
+
+--
+Eitan Suez
+
