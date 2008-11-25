@@ -11,6 +11,7 @@ import gturtle.ui.ConsolePane
 import gturtle.ui.ConsolePiper
 import static java.awt.Cursor.*
 import javax.swing.border.EmptyBorder
+import javax.swing.event.PopupMenuListener
 
 /**
  * User: Eitan Suez
@@ -91,6 +92,37 @@ class GAction extends AbstractAction
   }
 }
 
+class FifoOrderedSet
+{
+  LinkedList ll
+  int size = 5;
+
+  FifoOrderedSet(int size)
+  {
+    ll = new LinkedList()
+    this.size = size
+  }
+
+  void add(item)
+  {
+    if (ll.contains(item))
+    {
+      ll.remove(item)
+    }
+    ll.addFirst(item) 
+    if (ll.size() > this.size)
+    {
+      ll.removeLast()
+    }
+  }
+  void clear() { ll.clear() }
+  void remove(item) { ll.remove(item) }
+  void each(Closure closure) { ll.each closure }
+  void eachWithIndex(Closure closure) { ll.eachWithIndex closure }
+  int size() { ll.size() }
+  def get(int i) { ll.get(i) }
+}
+
 class MainPane extends JPanel
 {
   JTabbedPane editorTabs
@@ -99,13 +131,74 @@ class MainPane extends JPanel
   JSlider speedSlider
   JDialog aboutDlg
   TurtleConsole frame
-  JFileChooser chooser = new JFileChooser(System.getProperty("user.dir"))
+
+  Properties settings
+  JFileChooser chooser
+  FifoOrderedSet recentDocs
+  JMenu recentDocsSubMenu
 
   static String initText = "5.times { fd 100; rt 144 }\n"
 
+  void addToRecentDocs(File file)
+  {
+    if (file.exists())
+    {
+      recentDocs.add(file)
+    }
+  }
+
+  File settingsFile
+
+  void loadSettings()
+  {
+    settingsFile = new File(System.getProperty("user.home"), ".gturtle")
+    if (!settingsFile.exists())
+    {
+      settingsFile.createNewFile()
+    }
+    settings = new Properties()
+    settingsFile.withReader {Reader reader ->
+      settings.load(reader)
+    }
+    chooser = new JFileChooser()
+    String cwd = settings.getProperty("filesDir")
+    if (cwd == null)
+    {
+      cwd = System.getProperty("user.dir")
+    }
+    chooser.setCurrentDirectory(new File(cwd))
+
+    recentDocs = new FifoOrderedSet(4)
+    int i = 1
+    String filePath = settings.getProperty("recentdoc.${i}")
+    while (filePath != null)
+    {
+      addToRecentDocs(new File(filePath))
+      i++
+      filePath = settings.getProperty("recentdoc.${i}")
+    }
+  }
+
+  void rememberChooserDirectory(File file)
+  {
+    settings.setProperty("filesDir", file.getParent())
+  }
+  void saveSettings()
+  {
+    (1..recentDocs.size()).each { int i ->
+      settings.remove("recentdoc.${i}")
+    }
+    recentDocs.eachWithIndex { File item, int i ->
+      settings.setProperty("recentdoc.${i+1}", item.getCanonicalPath())
+    }
+    settingsFile.withWriter { Writer writer ->
+      settings.store(writer, "gturtle settings")
+    }
+  }
 
   MainPane(TurtleConsole container)
   {
+    loadSettings()
     frame = container;
     setLayout(new BorderLayout())
 
@@ -203,6 +296,7 @@ class MainPane extends JPanel
     {
       associateFileToEditor(container, file)
       setScriptText(file.getText())
+      addToRecentDocs(file) 
     }
 
     setFocusOnEditor()
@@ -213,19 +307,30 @@ class MainPane extends JPanel
     GSwing.doLater { currentScriptEditor().requestFocusInWindow() }
   }
 
-  void setupMenuBar()
+  def openFile(File file = null)
   {
-    def newAction = new GAction("New", KeyEvent.VK_N, KeyStroke.getKeyStroke(KeyEvent.VK_N, KeyEvent.CTRL_MASK), this.&newFile)
-
-    def openAction = new GAction("Open", KeyEvent.VK_O, KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_MASK), {
+    if (file == null)
+    {
       chooser.setDialogTitle("Open")
       int choice = chooser.showOpenDialog(frame)
       if (choice == JFileChooser.APPROVE_OPTION)
       {
-        File file = chooser.getSelectedFile()
+        file = chooser.getSelectedFile()
+        rememberChooserDirectory(file)
         addFileTab(file)
       }
-    })
+    }
+    else
+    {
+      addFileTab(file)
+    }
+  }
+
+  void setupMenuBar()
+  {
+    def newAction = new GAction("New", KeyEvent.VK_N, KeyStroke.getKeyStroke(KeyEvent.VK_N, KeyEvent.CTRL_MASK), this.&newFile)
+
+    def openAction = new GAction("Open", KeyEvent.VK_O, KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_MASK), this.&openFile)
     def saveAction = new GAction("Save", KeyEvent.VK_S, KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_MASK), {
       File file = fileForEditor((JComponent) editorTabs.getSelectedComponent())
       if (file == null)
@@ -235,6 +340,7 @@ class MainPane extends JPanel
         if (choice == JFileChooser.APPROVE_OPTION)
         {
           file = chooser.getSelectedFile()
+          rememberChooserDirectory(file)
         }
         else
         {
@@ -253,6 +359,7 @@ class MainPane extends JPanel
         file.write(getScriptText())
         editorTabs.setTitleAt(editorTabs.getSelectedIndex(), file.getName());
         associateFileToEditor((JComponent) editorTabs.getSelectedComponent(), file)
+        rememberChooserDirectory(file)
       }
     })
     def closeAction = new GAction("Close", KeyEvent.VK_C, KeyStroke.getKeyStroke(KeyEvent.VK_W, KeyEvent.CTRL_MASK), {
@@ -260,13 +367,24 @@ class MainPane extends JPanel
       editorTabs.removeTabAt(editorTabs.getSelectedIndex())
     })
     def quitAction = new GAction("Exit", KeyEvent.VK_X, KeyStroke.getKeyStroke(KeyEvent.VK_Q, KeyEvent.CTRL_MASK), {
+      saveSettings()
       System.exit(0)
     })
+
+    recentDocsSubMenu = new JMenu("Recent Documents")
+    recentDocsSubMenu.setMnemonic('D' as char)
+    // this is kind of wasteful.  but it's simple.
+    recentDocsSubMenu.getPopupMenu().addPopupMenuListener([
+            popupMenuWillBecomeVisible : { rebuildRecentDocsSubMenu() },
+            popupMenuWillBecomeInvisible : {},
+            popupMenuCanceled : {}
+         ] as PopupMenuListener)
 
     JMenu fileMenu = new JMenu("File")
     fileMenu.setMnemonic('F' as char)
     fileMenu.add(newAction)
     fileMenu.add(openAction)
+    fileMenu.add(recentDocsSubMenu)
     fileMenu.add(saveAction)
     fileMenu.add(saveAsAction)
     fileMenu.add(closeAction)
@@ -322,6 +440,15 @@ class MainPane extends JPanel
     menuBar.add(debugMenu)
     menuBar.add(helpMenu)
     frame.setJMenuBar(menuBar)
+  }
+
+  void rebuildRecentDocsSubMenu()
+  {
+    recentDocsSubMenu.removeAll()
+    recentDocs.eachWithIndex { File file, int i ->
+      def action = new GAction("${i+1}. ${file.getName()}", KeyEvent.VK_1+i, null, this.&openFile.curry(file))
+      recentDocsSubMenu.add(action)
+    }
   }
 
   void changeFontSize(boolean up)
