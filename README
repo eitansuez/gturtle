@@ -6,7 +6,9 @@ Prerequisites
 -------------
 a. Java
 b. Apache Ant
-c. Groovy 1.6beta2 (installed, with groovy_home env var set)
+c. Groovy (with GROOVY_HOME env var set)
+   - for Mac I noticed 1.6beta2 does not work, so use v1.5.7
+
 
 To Run: type "ant"
 Check out the samples in the samples/ directory
