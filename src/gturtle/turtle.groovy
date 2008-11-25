@@ -29,7 +29,7 @@ class GSwing
 
 class TurtleConsole extends JFrame implements Runnable
 {
-  static String _appTitle = "Turtle Console"
+  static String APP_TITLE = "Turtle Console"
 
   static void main(args)
   {
@@ -53,7 +53,7 @@ class TurtleConsole extends JFrame implements Runnable
 
   void run()
   {
-    setTitle(_appTitle)
+    setTitle(APP_TITLE)
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE)
     mainPane = new MainPane(this)
     setContentPane(mainPane)
@@ -63,11 +63,11 @@ class TurtleConsole extends JFrame implements Runnable
 
   void clearTitle()
   {
-    setTitle(_appTitle)
+    setTitle(APP_TITLE)
   }
   void appendTitle(String text)
   {
-    setTitle("${_appTitle} - ${text}")
+    setTitle("${APP_TITLE} - ${text}")
   }
 
   void loadScriptFile(File file)
