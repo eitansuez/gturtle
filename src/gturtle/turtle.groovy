@@ -24,6 +24,7 @@ class GSwing
   {
     SwingUtilities.invokeLater(c as Runnable)
   }
+  static int CMD_MASK = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()
 }
 
 class TurtleConsole extends JFrame implements Runnable
@@ -36,7 +37,7 @@ class TurtleConsole extends JFrame implements Runnable
     {
       UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
     }
-    catch (UnsupportedLookAndFeelException ex)
+    catch (Exception ex)
     {
       UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
     }
@@ -328,10 +329,10 @@ class MainPane extends JPanel
 
   void setupMenuBar()
   {
-    def newAction = new GAction("New", KeyEvent.VK_N, KeyStroke.getKeyStroke(KeyEvent.VK_N, KeyEvent.CTRL_MASK), this.&newFile)
+    def newAction = new GAction("New", KeyEvent.VK_N, KeyStroke.getKeyStroke(KeyEvent.VK_N, GSwing.CMD_MASK), this.&newFile)
 
-    def openAction = new GAction("Open", KeyEvent.VK_O, KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_MASK), this.&openFile)
-    def saveAction = new GAction("Save", KeyEvent.VK_S, KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_MASK), {
+    def openAction = new GAction("Open", KeyEvent.VK_O, KeyStroke.getKeyStroke(KeyEvent.VK_O, GSwing.CMD_MASK), this.&openFile)
+    def saveAction = new GAction("Save", KeyEvent.VK_S, KeyStroke.getKeyStroke(KeyEvent.VK_S, GSwing.CMD_MASK), {
       File file = fileForEditor((JComponent) editorTabs.getSelectedComponent())
       if (file == null)
       {
@@ -350,7 +351,7 @@ class MainPane extends JPanel
       file.write(getScriptText())
     })
     def saveAsAction = new GAction("Save As", KeyEvent.VK_A, KeyStroke.getKeyStroke(KeyEvent.VK_S,
-            KeyEvent.CTRL_MASK + KeyEvent.SHIFT_MASK), {
+            GSwing.CMD_MASK + KeyEvent.SHIFT_MASK), {
       chooser.setDialogTitle("Save As")
       int choice = chooser.showSaveDialog(frame)
       if (choice == JFileChooser.APPROVE_OPTION)
@@ -362,11 +363,11 @@ class MainPane extends JPanel
         rememberChooserDirectory(file)
       }
     })
-    def closeAction = new GAction("Close", KeyEvent.VK_C, KeyStroke.getKeyStroke(KeyEvent.VK_W, KeyEvent.CTRL_MASK), {
+    def closeAction = new GAction("Close", KeyEvent.VK_C, KeyStroke.getKeyStroke(KeyEvent.VK_W, GSwing.CMD_MASK), {
       removeAssociation((JComponent) editorTabs.getSelectedComponent())
       editorTabs.removeTabAt(editorTabs.getSelectedIndex())
     })
-    def quitAction = new GAction("Exit", KeyEvent.VK_X, KeyStroke.getKeyStroke(KeyEvent.VK_Q, KeyEvent.CTRL_MASK), {
+    def quitAction = new GAction("Exit", KeyEvent.VK_X, KeyStroke.getKeyStroke(KeyEvent.VK_Q, GSwing.CMD_MASK), {
       saveSettings()
       System.exit(0)
     })
@@ -390,18 +391,18 @@ class MainPane extends JPanel
     fileMenu.add(closeAction)
     fileMenu.add(quitAction)
 
-    def runScriptAction = new GAction("Run", KeyEvent.VK_R, KeyStroke.getKeyStroke(KeyEvent.VK_R, KeyEvent.CTRL_MASK), {
+    def runScriptAction = new GAction("Run", KeyEvent.VK_R, KeyStroke.getKeyStroke(KeyEvent.VK_R, GSwing.CMD_MASK), {
       execute(currentScriptEditor().getText())
     })
-    def runSelectedAction = new GAction("Run Selection", KeyEvent.VK_E, KeyStroke.getKeyStroke(KeyEvent.VK_R, KeyEvent.CTRL_MASK
+    def runSelectedAction = new GAction("Run Selection", KeyEvent.VK_E, KeyStroke.getKeyStroke(KeyEvent.VK_R, GSwing.CMD_MASK
             + KeyEvent.SHIFT_MASK), {
       execute(currentScriptEditor().getSelectedText())
     })
 
     def decreaseFontAction = new GAction("Decrease font", KeyEvent.VK_I,
-      KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, KeyEvent.CTRL_MASK), this.&changeFontSize.curry(false))
+      KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, GSwing.CMD_MASK), this.&changeFontSize.curry(false))
     def increaseFontAction = new GAction("Increase font", KeyEvent.VK_D,
-      KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, KeyEvent.CTRL_MASK), this.&changeFontSize.curry(true))
+      KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, GSwing.CMD_MASK), this.&changeFontSize.curry(true))
 
     JMenu scriptMenu = new JMenu("Script")
     scriptMenu.setMnemonic('S' as char)
@@ -411,7 +412,7 @@ class MainPane extends JPanel
     scriptMenu.add(increaseFontAction)
 
     def clearConsoleAction = new GAction("Clear Console", KeyEvent.VK_C,
-            KeyStroke.getKeyStroke(KeyEvent.VK_K, KeyEvent.CTRL_MASK), {
+            KeyStroke.getKeyStroke(KeyEvent.VK_K, GSwing.CMD_MASK), {
               cPane.clear()
             })
 
