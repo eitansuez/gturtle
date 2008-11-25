@@ -5,6 +5,7 @@
  <property name="build.classes.dir" value="out" />
  <property name="src.dir" location="src" />
  <property name="lib.dir" location="lib" />
+ <property name="lib.tools.dir" location="toolslib" />
  <property name="dist.dir" value="dist" />
 
  <property name="main.class" value="gturtle.TurtleConsole" />
@@ -56,5 +57,18 @@
      <fileset dir="${build.classes.dir}" includes="**/*" />
    </jar>
  </target>
+
+ <target name="macappbundle" description="create macosx app bundle" depends="jar">
+   <taskdef name="jarbundler" classname="net.sourceforge.jarbundler.JarBundler"
+            classpath="${lib.tools.dir}/jarbundler-1.9.jar" />
+   <jarbundler dir="${dist.dir}" name="${ant.project.name}" mainclass="${main.class}"
+               jvmversion="1.5+" icon="resources/bug_red.icns">
+      <javaproperty name="apple.awt.textantialiasing" value="on" />
+      <jarfileset dir="${dist.dir}" includes="${ant.project.name}.jar" />
+      <jarfileset dir="${lib.dir}" includes="*.jar" />
+      <jarfileset dir="${env.GROOVY_HOME}/embeddable" includes="*.jar" />
+   </jarbundler>
+ </target>
+
 
 </project>
