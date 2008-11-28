@@ -1,0 +1,11 @@
+clean()
+def polyspi(side, angle, increment)
+{
+    if (side > 200) return;
+    fd side
+    rt angle
+    polyspi(side+increment, angle, increment)
+}
+
+polyspi(5, 75, 1)
+
