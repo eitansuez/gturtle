@@ -202,7 +202,7 @@ class MainPane extends JPanel
   MainPane(TurtleConsole container)
   {
     loadSettings()
-    frame = container;
+    frame = container
     setLayout(new BorderLayout())
 
     setupEditorTabs()
