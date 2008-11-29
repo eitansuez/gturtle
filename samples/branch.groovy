@@ -1,15 +1,16 @@
+t = newturtle('bug')
 
 def branch(length, level)
 {
     if(level == 0) return
-    fd length
+    t.fd length
     def distance = length/2
-    lt 45
+    t.lt 45
     branch(distance, level-1)
-    rt 90
+    t.rt 90
     branch(distance, level-1)
-    lt 45
-    bk length
+    t.lt 45
+    t.bk length
 }
 clean()
 //branch(100,6)
@@ -18,38 +19,38 @@ clean()
 def lbranch(length, angle, level)
 {
     def dist = 2*length
-    fd(dist)
+    t.fd(dist)
     node(length, angle, level)
-    bk(dist)
+    t.bk(dist)
 }
 def rbranch(length, angle, level)
 {
-    fd length
+    t.fd length
     node(length, angle, level)
-    bk length
+    t.bk length
 }
 def mbranch(length, angle, level)
 {
-    fd(length*1.5)
+    t.fd(length*1.5)
     node(length, angle, level)
-    bk(length*1.5)
+    t.bk(length*1.5)
 }
 
 def node(length, angle, level)
 {
     if (level == 0) return;
-    lt angle
+    t.lt angle
     lbranch(length, angle, level -1)
-    rt(angle)
+    t.rt(angle)
 //    mbranch(length, angle, level-1)
-    rt(angle)
+    t.rt(angle)
     rbranch(length, angle, level-1)
-    lt angle
+    t.lt angle
 }
 
 
-setpencolor(new java.awt.Color(0x008800))
-setpos(30, -150)
+t.setPenColor(new java.awt.Color(0x008800))
+t.setPos(30, -150)
 lbranch(25, 20, 7)
 
 

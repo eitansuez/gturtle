@@ -2,23 +2,21 @@
 
 Turtle Geometry
 
-Issues:
-  - println's don't work or don't work reliably
-  - each editor should have its own shell / context
-  - Program sometimes stops responding.  Guessing that GroovyShell might need to be replaced perhaps after an exception takes place.
+Enhancements:
+  - Add ability to set runspeed (animate drawing)
   - Provide a way to stop / interrupt the evaluation thread from the GUI
 
-Enhancements:
   - Editor view should have a status bar with editor caret position information
   - Mouseover turtlegraphics area should display coordinates (as tooltip?)
-
-  - Add ability to set runspeed (animate drawing)
 
   - Try out jEdit's TextArea in place of JSyntaxPane (perhaps also jEdit's file chooser?)
   - Idea:  implement GTurtle as a jEdit plugin
 
-  - Ability to name and hatch turtles
-
   - Example:  instead of exposing commands setpencolor/showpencolor, expose the property
      "pencolor".  then can just say "pencolor = red" or "println pencolor"
+
+Issues:
+  - println's don't work or don't work reliably
+  - each editor should have its own shell / context
+  - Program sometimes stops responding.  Guessing that GroovyShell might need to be replaced perhaps after an exception takes place.
 

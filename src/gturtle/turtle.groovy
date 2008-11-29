@@ -528,46 +528,43 @@ class State
   float pensize = 1.0f
 }
 
-
-class TurtleCanvas extends JComponent implements MouseListener, MouseMotionListener
+class Turtle implements MouseListener, MouseMotionListener
 {
-
-  static ImageIcon turtlesprite, bugsprite;
-  static {
-    ClassLoader loader = Thread.currentThread().getContextClassLoader()
-    URL url = loader.getResource("gturtle/kturtle.png")
-    URL bugurl = loader.getResource("gturtle/bug_red.png")
-    turtlesprite = new ImageIcon(url)
-    bugsprite = new ImageIcon(bugurl)
-  }
-
-
   TVector heading_v
   def states
   State state
+  ImageIcon sprite
+  TurtleCanvas canvas
 
-  GroovyShell shell
-
-  TurtleCanvas()
+  Turtle(ImageIcon sprite, TurtleCanvas canvas)
   {
+    this.sprite = sprite
+    this.canvas = canvas
     heading_v = new TVector(x: 0, y: 1)
     reset()
-    newShell()
     setupTurtleDraggable()
+  }
+
+  void reset()
+  {
+    states = []
+    state = new State()
+    setPos(0, 0)
+    setHeading(90)
   }
 
   void setupTurtleDraggable()
   {
-    addMouseListener(this)
-    addMouseMotionListener(this) 
+    canvas.addMouseListener(this)
+    canvas.addMouseMotionListener(this)
   }
 
   boolean indragmode = false
   public void mouseClicked(MouseEvent e) { }
   public void mousePressed(MouseEvent e)
   {
-    int w = bugsprite.getIconWidth()
-    int h = bugsprite.getIconHeight()
+    int w = sprite.getIconWidth()
+    int h = sprite.getIconHeight()
     TVector pos = getPos();
     Point translated = new Point((int) (pos.x+250), (int) (-pos.y+250))
     Rectangle spriteSpace = new Rectangle((int) (translated.x-w/2), (int) (translated.y-h/2), w, h)
@@ -586,207 +583,36 @@ class TurtleCanvas extends JComponent implements MouseListener, MouseMotionListe
     {
       Point converted = new Point((int) (e.getX()-250), (int) ((e.getY()-250)*-1))
       setPos(converted.x, converted.y)
-      repaint()
+      canvas.repaint()
     }
   }
   public void mouseEntered(MouseEvent e) { }
   public void mouseExited(MouseEvent e) { }
   public void mouseMoved(MouseEvent e) { }
 
-
-
-  void reset()
-  {
-    states = []
-    state = new State()
-    setPos(0, 0)
-    setHeading(90) 
-  }
-
-  void newShell()
-  {
-    def context = new Binding()
-    Map bindings = [
-            "fd" : this.&fd,
-            "bk" : this.&bk,
-            "rt" : this.&rt,
-            "lt" : this.&lt,
-            "clean" : this.&clean,
-            "home" : this.&home,
-            
-            "setpos" : this.&setPos,
-            "pos" : this.&getPos,
-            
-            "setheading" : this.&setHeading,
-            "heading" : this.heading,
-
-            "setpencolor" : this.&setPenColor,
-            "pencolor" : this.state.pencolor,
-
-            "setpensize" : this.&setPenSize,
-            "pensize" : this.state.pensize,
-            
-            "setpendown" : this.&setPenDown.curry(true),
-            "setpenup" : this.&setPenDown.curry(false),
-            "ispendown" : this.state.pendown,
-
-            "show" : this.&show,
-            "setgridon" : this.&setGridOn.curry(true),
-            "setgridoff" : this.&setGridOn.curry(false),
-
-            "setwrapon" : this.&setWrapOn.curry(true),
-            "setwrapoff" : this.&setWrapOn.curry(false)
-    ]
-    bindings.each { entry ->
-      context.setProperty(entry.key, entry.value)
-    }
-    shell = new GroovyShell(context)
-    System.out.println("[new groovy shell created]")
-  }
-
-  void setPenDown(boolean down)
-  {
-    state.pendown = down
-    System.out.println("[ok, pen is ${state.pendown ? 'down' : 'up'}]")
-  }
-  
-  void setPenColor(Color color)
-  {
-    state.pencolor = color
-    System.out.println("[ok, pencolor is: ${state.pencolor}]")
-  }
-
-  void setPenSize(float value)
-  {
-    state.pensize = value
-    System.out.println("[ok, pensize is: ${state.pensize}]")
-  }
-
-  boolean delaySet = false
-  long delayMs = 0
-  void setDelay(long ms)
-  {
-    delayMs = ms
-    delaySet = (ms > 0)
-  }
-
-  protected void paintComponent(Graphics g)
-  {
-    Graphics2D g2 = (Graphics2D) g
-    g2.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON)
-
-    g2.setColor(Color.white)
-    g2.fillRect(0, 0, getWidth()-1, getHeight()-1)
-    
-    g2.translate(250, 250)
-    g2.scale(1.0, -1.0)
-
-    if(gridOn)
-    {
-      drawCoordinateGrid(g2)
-    }
-    
-    State s1 = states.first()
-    states.tail().each { State s2 ->
-      if (s2.pendown)
-      {
-        g2.setColor(s2.pencolor)
-        g2.setStroke(new BasicStroke(s2.pensize))
-        g2.drawLine((int) s1.v.x, (int) s1.v.y, (int) s2.v.x, (int) s2.v.y)
-      }
-      s1 = s2
-    }
-
-    drawHeadingIndicator(g2)
-  }
-
-  boolean gridOn = true
-  void setGridOn(boolean on)
-  {
-    this.gridOn = on
-    repaint()
-  }
-
-  Stroke thinStroke = new BasicStroke(0.5f)
-  Stroke minorStroke = new BasicStroke(1.0f)
-  
-  void drawCoordinateGrid(Graphics2D g2)
-  {
-    Color lineColor = new Color(0x85, 0x96, 0xCB, 0x80)
-    Color axisColor = new Color(0xCD, 0x51, 0x5C, 0x80)
-    int minorStep = 50
-    (-240..240).step(10, { int i ->
-      if (i==0)
-      {
-        g2.setColor(axisColor)
-      }
-      else
-      {
-        g2.setColor(lineColor)
-      }
-      boolean minor = (i % minorStep == 0)
-      g2.setStroke(minor ? minorStroke : thinStroke)
-      g2.drawLine(i, -250, i, 250)
-      g2.drawLine(-250, i, 250, i)
-    })
-  }
-
-  void drawHeadingIndicator(Graphics2D g2)
-  {
-    double theta = heading_rads()
-    TVector lastPos = states.last().v
-    g2.translate(lastPos.x, lastPos.y)
-    g2.rotate(theta)
-
-    g2.rotate(Math.PI/2)
-//    g2.drawImage(turtlesprite.getImage(), (int) (-turtlesprite.getIconWidth()/2.0), (int) (-turtlesprite.getIconHeight()/2.0), null)
-    g2.drawImage(bugsprite.getImage(), (int) (-bugsprite.getIconWidth()/2.0), (int) (-bugsprite.getIconHeight()/2.0), null)
-    g2.rotate(-Math.PI/2)
-
-    g2.rotate(-theta)
-    g2.translate(-lastPos.x, -lastPos.y)
-  }
-
-
-  Dimension preferredSize = new Dimension(500,500)
-  Dimension getPreferredSize() { preferredSize; }
-
-  synchronized void execute(String scriptText)
-  {
-    Date start = new Date();
-
-    // a nicety.. (there's probably another way to tell the script to pre-import packages..)
-    scriptText = "import static java.awt.Color.*\n" +
-                 "import static java.lang.Math.*\n" +
-                 scriptText
-    try
-    {
-      shell.evaluate(scriptText)
-    }
-    catch (Exception ex)
-    {
-      def msg = ex.getCause() ? ex.getCause().getMessage() : ex.getMessage()
-      System.err.println msg
-    }
-
-    Date end = new Date();
-    long time_ms = end.getTime() - start.getTime()
-    System.out.println "[time: ${time_ms} ms]"
-    repaint()
-  }
-
   boolean wrapOn = true
   void setWrapOn(boolean on)
   {
     this.wrapOn = on
   }
-
-  // commands:
-  void show(Object o)
+  void setPenDown(boolean down)
   {
-    System.out.println o.toString()
+    state.pendown = down
+//    System.out.println("[ok, pen is ${state.pendown ? 'down' : 'up'}]")
   }
-  
+
+  void setPenColor(Color color)
+  {
+    state.pencolor = color
+//    System.out.println("[ok, pencolor is: ${state.pencolor}]")
+  }
+
+  void setPenSize(float value)
+  {
+    state.pensize = value
+//    System.out.println("[ok, pensize is: ${state.pensize}]")
+  }
+
   void fd(double distance)
   {
     state.v = states.last().v + (heading_v * distance)
@@ -802,14 +628,14 @@ class TurtleCanvas extends JComponent implements MouseListener, MouseMotionListe
 
     if (states.size() % 100 == 0)
     {
-      repaint()
+      canvas.repaint()
     }
   }
 
   protected void wrap(TVector v1, TVector v2)
   {
     states << new State(v: v2, pendown: state.pendown, pencolor: state.pencolor, pensize: state.pensize)
-    TVector screen = new TVector(x: getWidth(), y: getHeight())
+    TVector screen = new TVector(x: canvas.getWidth(), y: canvas.getHeight())
     TVector nextV = (v2.translate(250) % screen).translate(-250)
     if (nextV != v2)
     {
@@ -819,8 +645,6 @@ class TurtleCanvas extends JComponent implements MouseListener, MouseMotionListe
     }
   }
 
-  protected TVector translate
-  
   void bk(double distance) { fd(-distance) }
   void lt(double angleDegrees)
   {
@@ -864,10 +688,189 @@ class TurtleCanvas extends JComponent implements MouseListener, MouseMotionListe
     double rads = deg2rad(angleDegrees)
     heading_v = new TVector(x: Math.cos(rads), y: Math.sin(rads))
   }
-  // end-commands
 
   double deg2rad(double deg) { deg * 2 * Math.PI / 360 }
   double rad2deg(double rad) { rad * 360 / (2 * Math.PI) }
+
+  def draw(Graphics2D g2)
+  {
+    State s1 = states.first()
+    states.tail().each { State s2 ->
+      if (s2.pendown)
+      {
+        g2.setColor(s2.pencolor)
+        g2.setStroke(new BasicStroke(s2.pensize))
+        g2.drawLine((int) s1.v.x, (int) s1.v.y, (int) s2.v.x, (int) s2.v.y)
+      }
+      s1 = s2
+    }
+
+    drawHeadingIndicator(g2)
+  }
+
+  void drawHeadingIndicator(Graphics2D g2)
+  {
+    double theta = heading_rads()
+    TVector lastPos = states.last().v
+    g2.translate(lastPos.x, lastPos.y)
+    g2.rotate(theta)
+
+    g2.rotate(Math.PI/2)
+    g2.drawImage(sprite.getImage(),
+            (int) (-sprite.getIconWidth()/2.0), (int) (-sprite.getIconHeight()/2.0), null)
+    g2.rotate(-Math.PI/2)
+
+    g2.rotate(-theta)
+    g2.translate(-lastPos.x, -lastPos.y)
+  }
+
+}
+
+
+class TurtleCanvas extends JComponent
+{
+  static ImageIcon turtlesprite, bugsprite;
+  static {
+    ClassLoader loader = Thread.currentThread().getContextClassLoader()
+    URL url = loader.getResource("gturtle/kturtle.png")
+    URL bugurl = loader.getResource("gturtle/bug_red.png")
+    turtlesprite = new ImageIcon(url)
+    bugsprite = new ImageIcon(bugurl)
+  }
+  def iconmap = ['turtle' : turtlesprite, 'bug' : bugsprite]
+
+  GroovyShell shell
+  def turtles = []
+
+  TurtleCanvas()
+  {
+    newShell()
+  }
+
+  Turtle newturtle(String kind)
+  {
+    def t = new Turtle(iconmap[kind], this)
+    turtles << t
+    t
+  }
+
+  void newShell()
+  {
+    def context = new Binding()
+    Map bindings = [
+        "show" : this.&show,
+        "setgridon" : this.&setGridOn.curry(true),
+        "setgridoff" : this.&setGridOn.curry(false),
+        "newturtle" : this.&newturtle,
+        "clean" : this.&clean
+
+    ]
+    bindings.each { entry ->
+      context.setProperty(entry.key, entry.value)
+    }
+    shell = new GroovyShell(context)
+    System.out.println("[new groovy shell created]")
+  }
+
+  boolean delaySet = false
+  long delayMs = 0
+  void setDelay(long ms)
+  {
+    delayMs = ms
+    delaySet = (ms > 0)
+  }
+
+  protected void paintComponent(Graphics g)
+  {
+    Graphics2D g2 = (Graphics2D) g
+    g2.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON)
+
+    g2.setColor(Color.white)
+    g2.fillRect(0, 0, getWidth()-1, getHeight()-1)
+    
+    g2.translate(250, 250)
+    g2.scale(1.0, -1.0)
+
+    if(gridOn)
+    {
+      drawCoordinateGrid(g2)
+    }
+
+    turtles.each { turtle ->
+      turtle.draw(g2)
+    }
+  }
+
+  void clean()
+  {
+    turtles.each { turtle ->
+      turtle.clean()
+    }
+  }
+
+  boolean gridOn = true
+  void setGridOn(boolean on)
+  {
+    this.gridOn = on
+  }
+
+  Stroke thinStroke = new BasicStroke(0.5f)
+  Stroke minorStroke = new BasicStroke(1.0f)
+  
+  void drawCoordinateGrid(Graphics2D g2)
+  {
+    Color lineColor = new Color(0x85, 0x96, 0xCB, 0x80)
+    Color axisColor = new Color(0xCD, 0x51, 0x5C, 0x80)
+    int minorStep = 50
+    (-240..240).step(10, { int i ->
+      if (i==0)
+      {
+        g2.setColor(axisColor)
+      }
+      else
+      {
+        g2.setColor(lineColor)
+      }
+      boolean minor = (i % minorStep == 0)
+      g2.setStroke(minor ? minorStroke : thinStroke)
+      g2.drawLine(i, -250, i, 250)
+      g2.drawLine(-250, i, 250, i)
+    })
+  }
+
+  Dimension preferredSize = new Dimension(500,500)
+  Dimension getPreferredSize() { preferredSize; }
+
+  synchronized void execute(String scriptText)
+  {
+    turtles = []
+    Date start = new Date();
+
+    // a nicety.. (there's probably another way to tell the script to pre-import packages..)
+    scriptText = "import static java.awt.Color.*\n" +
+                 "import static java.lang.Math.*\n" +
+                 scriptText
+    try
+    {
+      shell.evaluate(scriptText)
+    }
+    catch (Exception ex)
+    {
+      def msg = ex.getCause() ? ex.getCause().getMessage() : ex.getMessage()
+      System.err.println msg
+    }
+
+    Date end = new Date();
+    long time_ms = end.getTime() - start.getTime()
+    System.out.println "[time: ${time_ms} ms]"
+    repaint()
+  }
+
+  void show(Object o)
+  {
+    System.out.println o.toString()
+  }
+  
 }
 
 

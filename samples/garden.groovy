@@ -1,17 +1,18 @@
 /* garden */
+t = newturtle('bug')
 
 def arcr(size, angle)
 {
     angle.times {
-        fd size/25
-        rt 1
+        t.fd size/25
+        t.rt 1
     }
 }
 def arcl(size, angle)
 {
     angle.times {
-        fd size/25
-        lt 1
+        t.fd size/25
+        t.lt 1
     }
 }
 
@@ -24,9 +25,9 @@ def qcircle(size)
 def petal(size)
 {
   qcircle(size/7)
-  rt 90
+  t.rt 90
   qcircle(size/7)
-  rt 90
+  t.rt 90
 }
 def randomcolor()
 {
@@ -37,11 +38,11 @@ def randomcolor()
 }
 def flowerhead(size, numpetals)
 {
-    setpencolor(randomcolor())
+    t.setPenColor(randomcolor())
     def angle = 360.0/numpetals
     numpetals.times {
         petal(size)
-        rt angle
+        t.rt angle
     }
 }
 
@@ -49,7 +50,7 @@ def pickrandompos()
 {
     def x = random() * 400 - 200
     def y = random() * 200 - 250
-    setpos(x,y)
+    t.setPos(x,y)
 }
 def flower(size, numpetals)
 {
@@ -64,9 +65,9 @@ def flower(size, numpetals)
       steml(size)
     }
 
-    setpensize((float) (random() * 1.5 + 0.5))
+    t.setPenSize((float) (random() * 1.5 + 0.5))
     flowerhead(size, numpetals)
-    setheading(90)
+    t.setHeading(90)
 }
 
 def shadeofgreen()
@@ -77,17 +78,17 @@ def shadeofgreen()
 
 def steml(size)
 {
-    setpencolor(shadeofgreen())
-    setpensize(3)
+    t.setPenColor(shadeofgreen())
+    t.setPenSize(3)
     arcl(size, 30)
-    rt 30
+    t.rt 30
 }
 def stemr(size)
 {
-    setpencolor(shadeofgreen())
-    setpensize(3)
+    t.setPenColor(shadeofgreen())
+    t.setPenSize(3)
     arcr(size, 30)
-    lt 30
+    t.lt 30
 }
 
 def garden(numflowers)
@@ -101,4 +102,4 @@ def garden(numflowers)
 
 clean()
 garden(6)
-setpos(0,0)
+t.setPos(0,0)

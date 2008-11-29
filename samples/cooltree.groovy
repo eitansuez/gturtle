@@ -13,31 +13,33 @@
 // for fun, try to make the tree not exactly end where it started by modifying,
 //  say, the final lt 30 to lt 29.
 
+t = newturtle('bug')
+
 def branch(length, level, color)
 {
     if(level == 0) return
-    setpencolor(color)
-    setpensize(level * 2)
-    fd length
+    t.setPenColor(color)
+    t.setPenSize(level * 2)
+    t.fd length
     def distance = length/1.3
     def blue = 0x15
     def red = color.getRed()
     def green = color.getGreen()
     def newcolor = new java.awt.Color(red-redincrement, green+greenincrement, blue)
     def angle = 30
-    lt angle
+    t.lt angle
     branch(distance, level-1, newcolor)
-    rt angle
+    t.rt angle
     branch(distance, level-1, newcolor)
-    rt angle
+    t.rt angle
     branch(distance, level-1, newcolor)
-    lt angle  // change to lt 29 and see what happens
-    setpencolor color
-    bk length
+    t.lt angle  // change to lt 29 and see what happens
+    t.setPenColor color
+    t.bk length
 }
 
 clean()
-setpos(0,-200)
+t.setPos(0,-200)
 def brown = new java.awt.Color(0x944F15)
 // final green is around ~ 0x1C9415
 level = 6

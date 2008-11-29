@@ -1,11 +1,15 @@
 clean()
+t = newturtle('bug')
 def polyspi(side, angle, increment)
 {
     if (side > 200) return;
-    fd side
-    rt angle
+    t.fd side
+    t.rt angle
     polyspi(side+increment, angle, increment)
 }
 
-polyspi(5, 75, 1)
+def darkgreen = new java.awt.Color(0x008000)
+t.setPenSize(2)
+t.setPenColor(darkgreen)
+polyspi(5, 75, 3)
 

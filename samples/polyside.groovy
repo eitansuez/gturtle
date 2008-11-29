@@ -2,17 +2,18 @@ def poly(n)
 {
   def angle = 360/n
   n.times {
-    fd 100
-    rt angle
+    t.fd 100
+    t.rt angle
   }
 }
 
 clean()
+t = newturtle('bug')
 def colors = [green, red, blue]
-setpensize 2
+t.setPenSize 2
 
-setpos(-150, -100)
+t.setPos(-150, -100)
 (4..10).each { n ->
-  setpencolor colors[n % 3]
+  t.setPenColor colors[n % 3]
   poly n
 }

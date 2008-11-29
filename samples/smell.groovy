@@ -1,24 +1,25 @@
 /* smell */
 
-foodpoint = [-150,-50]
+foodpoint = [-150,150]
+t = newturtle('bug')
 
 def drawfoodpoint()
 {
-    setpos(foodpoint[0], foodpoint[1])
-    rt 45
-    fd 30
-    bk 60
-    fd 30
-    rt 90
-    fd 30
-    bk 60
-    fd 30
+    t.setPos(foodpoint[0], foodpoint[1])
+    t.rt 45
+    t.fd 30
+    t.bk 60
+    t.fd 30
+    t.rt 90
+    t.fd 30
+    t.bk 60
+    t.fd 30
 }
 
 def distancefromfood()
 {
-    def w = foodpoint[0] - pos().x
-    def h = foodpoint[1] - pos().y
+    def w = foodpoint[0] - t.getPos().x
+    def h = foodpoint[1] - t.getPos().y
     sqrt(w*w + h*h)
 }
 
@@ -35,19 +36,19 @@ def strongersmell(lastdistance)
 }
 
 step = 1
-angle = 100
+angle = 20
 
 clean()
 drawfoodpoint()
-home()
+t.home()
 
 distance = distancefromfood()
 while (distancefromfood() > 10)
 {
-    fd step
+    t.fd step
     if (!strongersmell(distance))
     {
-      rt angle
+      t.rt angle
     }
     distance = distancefromfood()
 }
