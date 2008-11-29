@@ -14,9 +14,10 @@ Enhancements:
 
   - Example:  instead of exposing commands setpencolor/showpencolor, expose the property
      "pencolor".  then can just say "pencolor = red" or "println pencolor"
+  - Also: setup shell/script such that can do "new Turtle()" instead of binding a function to
+     do it on behalf of the script.
 
 Issues:
   - println's don't work or don't work reliably
-  - each editor should have its own shell / context
-  - Program sometimes stops responding.  Guessing that GroovyShell might need to be replaced perhaps after an exception takes place.
+  - should each editor have its own shell / context ?
 
