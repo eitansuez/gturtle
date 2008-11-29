@@ -138,7 +138,7 @@ class MainPane extends JPanel
   FifoOrderedSet recentDocs
   JMenu recentDocsSubMenu
 
-  static String initText = "5.times { fd 100; rt 144 }\n"
+  static String initText = "t = newturtle('bug')\n\n5.times { t.fd 100; t.rt 144 }\n"
 
   void addToRecentDocs(File file)
   {
