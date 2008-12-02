@@ -2,30 +2,24 @@ package gturtle
 
 import javax.swing.*
 import java.awt.*
-import static java.awt.RenderingHints.*
 import java.awt.event.*
 import jsyntaxpane.DefaultSyntaxKit
 import javax.swing.event.ChangeListener
 import javax.swing.event.ChangeEvent
 import gturtle.ui.ConsolePane
 import gturtle.ui.ConsolePiper
-import static java.awt.Cursor.*
 import javax.swing.border.EmptyBorder
 import javax.swing.event.PopupMenuListener
+import static java.awt.RenderingHints.*
+import static java.awt.Cursor.*
+import static java.awt.Color.*
+import static javax.swing.JSplitPane.*
+import groovy.swing.SwingBuilder
 
 /**
  * User: Eitan Suez
  * Date: Nov 17, 2008
  */
-
-class GSwing
-{
-  static doLater(Closure c)
-  {
-    SwingUtilities.invokeLater(c as Runnable)
-  }
-  static int CMD_MASK = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()
-}
 
 class TurtleConsole extends JFrame implements Runnable
 {
@@ -35,11 +29,11 @@ class TurtleConsole extends JFrame implements Runnable
   {
     try
     {
-      UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
+      UIManager.setLookAndFeel "com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel"
     }
     catch (Exception ex)
     {
-      UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+      UIManager.setLookAndFeel UIManager.systemLookAndFeelClassName
     }
 
     def console = new TurtleConsole()
@@ -53,50 +47,33 @@ class TurtleConsole extends JFrame implements Runnable
 
   void run()
   {
-    setTitle(APP_TITLE)
-    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE)
+    title = APP_TITLE
+    defaultCloseOperation = JFrame.EXIT_ON_CLOSE
     mainPane = new MainPane(this)
-    setContentPane(mainPane)
+    contentPane = mainPane
     pack()
     setVisible(true)
   }
 
   void clearTitle()
   {
-    setTitle(APP_TITLE)
+    title = APP_TITLE
   }
   void appendTitle(String text)
   {
-    setTitle("${APP_TITLE} - ${text}")
+    title = "${APP_TITLE} - ${text}"
   }
 
   void loadScriptFile(File file)
   {
-    mainPane.setScriptText(file.getText())
-  }
-}
-
-class GAction extends AbstractAction
-{
-  Closure closure
-  GAction(String name, int mnemonic, KeyStroke shortCut, Closure closure)
-  {
-    putValue (Action.NAME, name)
-    putValue (Action.MNEMONIC_KEY, mnemonic)
-    putValue (Action.ACCELERATOR_KEY, shortCut)
-    this.closure = closure
-  }
-
-  public void actionPerformed(ActionEvent e)
-  {
-    closure.call()
+    mainPane.scriptText = file.text
   }
 }
 
 class FifoOrderedSet
 {
   LinkedList ll
-  int size = 5;
+  int size = 5
 
   FifoOrderedSet(int size)
   {
@@ -126,6 +103,11 @@ class FifoOrderedSet
 
 class MainPane extends JPanel
 {
+
+  static int CMD_MASK = java.awt.Toolkit.defaultToolkit.menuShortcutKeyMask
+  static String initText = "t = newturtle('bug')\n\n5.times { t.fd 100; t.rt 144 }\n"
+
+  SwingBuilder swing
   JTabbedPane editorTabs
   ConsolePane cPane
   TurtleCanvas turtleCanvas
@@ -137,8 +119,61 @@ class MainPane extends JPanel
   JFileChooser chooser
   FifoOrderedSet recentDocs
   JMenu recentDocsSubMenu
+  File settingsFile
 
-  static String initText = "t = newturtle('bug')\n\n5.times { t.fd 100; t.rt 144 }\n"
+  MainPane(TurtleConsole container)
+  {
+    swing = new SwingBuilder()
+    loadSettings()
+    frame = container
+    setLayout(new BorderLayout())
+
+    editorTabs = swing.tabbedPane(preferredSize: [450, 500])
+    editorTabs.addChangeListener({ ChangeEvent evt ->
+      if (editorTabs.tabCount == 0)
+      {
+        frame.clearTitle()
+        return
+      }
+      String text = editorTabs.getTitleAt(editorTabs.getSelectedIndex())
+      frame.appendTitle(text)
+    } as ChangeListener)
+
+    turtleCanvas = new TurtleCanvas()
+    cPane = new ConsolePane()
+    
+    new ConsolePiper(cPane).pipeStreams()
+    JSplitPane topSplitPane = swing.splitPane(orientation: VERTICAL_SPLIT) {
+      splitPane(orientation: HORIZONTAL_SPLIT) {
+        widget(editorTabs)
+        widget(turtleCanvas)
+      }
+      scrollPane { widget(cPane) }
+    }
+    
+    add(topSplitPane, BorderLayout.CENTER)
+
+    setupMenuBar()
+
+    // work in progress:
+//    def slidePane = new JPanel()
+//    speedSlider = new JSlider(JSlider.HORIZONTAL, 0, 1000, 1000)
+//    speedSlider.addChangeListener({ ChangeEvent e ->
+//      if (speedSlider.valueIsAdjusting) return
+//      int speed = speedSlider.value
+//      println("slider value is "+speed)
+//      turtleCanvas.delay = 1000-speed
+//    } as ChangeListener)
+//    slidePane.add(new JLabel("Speed:"))
+//    slidePane.add(speedSlider)
+//    add(slidePane, BorderLayout.NORTH)
+    
+    swing.doLater {
+      setupAboutDlg()
+      newFile()
+      setScriptText(initText)
+    }
+  }
 
   void addToRecentDocs(File file)
   {
@@ -148,7 +183,6 @@ class MainPane extends JPanel
     }
   }
 
-  File settingsFile
 
   void loadSettings()
   {
@@ -162,14 +196,10 @@ class MainPane extends JPanel
       settings.load(reader)
     }
     chooser = new JFileChooser()
-    chooser.setMultiSelectionEnabled(true) 
+    chooser.multiSelectionEnabled = true
 
-    String cwd = settings.getProperty("filesDir")
-    if (cwd == null)
-    {
-      cwd = System.getProperty("user.dir")
-    }
-    chooser.setCurrentDirectory(new File(cwd))
+    String cwd = settings.getProperty("filesDir") ?: System.getProperty("user.dir")  // ?: means ||=
+    chooser.currentDirectory = new File(cwd)
 
     recentDocs = new FifoOrderedSet(4)
     int i = 1
@@ -184,7 +214,7 @@ class MainPane extends JPanel
 
   void rememberChooserDirectory(File file)
   {
-    settings.setProperty("filesDir", file.getParent())
+    settings.setProperty("filesDir", file.parent)
   }
   void saveSettings()
   {
@@ -192,82 +222,29 @@ class MainPane extends JPanel
       settings.remove("recentdoc.${i}")
     }
     recentDocs.eachWithIndex { File item, int i ->
-      settings.setProperty("recentdoc.${i+1}", item.getCanonicalPath())
+      settings.setProperty("recentdoc.${i+1}", item.canonicalPath)
     }
     settingsFile.withWriter { Writer writer ->
       settings.store(writer, "gturtle settings")
     }
   }
 
-  MainPane(TurtleConsole container)
-  {
-    loadSettings()
-    frame = container
-    setLayout(new BorderLayout())
-
-    setupEditorTabs()
-    turtleCanvas = new TurtleCanvas()
-    JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, editorTabs, turtleCanvas)
-
-    cPane = new ConsolePane()
-    new ConsolePiper(cPane).pipeStreams()
-    JSplitPane topSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, splitPane, new JScrollPane(cPane))
-    add(topSplitPane, BorderLayout.CENTER)
-
-    setupMenuBar()
-
-    // work in progress:
-    def slidePane = new JPanel()
-    speedSlider = new JSlider(JSlider.HORIZONTAL, 0, 1000, 1000)
-    speedSlider.addChangeListener({ ChangeEvent e ->
-      if (speedSlider.getValueIsAdjusting()) return
-      int speed = speedSlider.getValue()
-      println("slider value is "+speed)
-      turtleCanvas.setDelay(1000-speed)
-    } as ChangeListener)
-    slidePane.add(new JLabel("Speed:"))
-    slidePane.add(speedSlider)
-//    add(slidePane, BorderLayout.NORTH)
-    
-    GSwing.doLater {
-      setupAboutDlg()
-      newFile()
-      setScriptText(initText)
-    }
-  }
-
-  void setupEditorTabs()
-  {
-    editorTabs = new JTabbedPane()
-    editorTabs.setPreferredSize(new Dimension(450, 500))
-
-    editorTabs.addChangeListener({ ChangeEvent evt ->
-      if (editorTabs.getTabCount() == 0)
-      {
-        frame.clearTitle()
-        return;
-      }
-      String text = editorTabs.getTitleAt(editorTabs.getSelectedIndex())
-      frame.appendTitle(text)
-    } as ChangeListener)
-  }
-
   void execute(String text)
   {
-    frame.setCursor(getPredefinedCursor(WAIT_CURSOR))
-    new Thread({
+    frame.setCursor getPredefinedCursor(WAIT_CURSOR)
+    Thread.start {
       try
       {
         turtleCanvas.execute(text)
       }
       finally
       {
-        GSwing.doLater {
-          currentScriptEditor().requestFocusInWindow()
-          frame.setCursor(getPredefinedCursor(DEFAULT_CURSOR))
+        swing.doLater {
+          currentScriptEditor()?.requestFocus()
+          frame.setCursor getPredefinedCursor(DEFAULT_CURSOR)
         }
       }
-    }).start()
+    }
   }
 
   static String filepropertykey = "backingfile"
@@ -288,65 +265,67 @@ class MainPane extends JPanel
 
   def addFileTab(File file)
   {
-    String title = (file == null) ? "New File" : file.getName()
+    String title = (file) ? file.name : "New File"
 
     JScrollPane container = newScriptEditor()
     editorTabs.addTab(title, container)
 
-    editorTabs.setSelectedComponent(container)
+    editorTabs.selectedComponent = container
 
-    if (file != null)
+    if (file)
     {
       associateFileToEditor(container, file)
-      GSwing.doLater {
-        ((JEditorPane) scrollPaneContents(container)).setText(file.getText())
+      swing.doLater {
+        ((JEditorPane) scrollPaneContents(container)).text = file.text
       }
       addToRecentDocs(file)
     }
 
-    setFocusOnEditor()
+    focusOnEditor()
   }
 
-  def setFocusOnEditor()
+  def focusOnEditor()
   {
-    GSwing.doLater { currentScriptEditor().requestFocusInWindow() }
+    swing.doLater { currentScriptEditor()?.requestFocus() }
   }
 
   def openFile(File file = null)
   {
-    if (file == null)
+    if (file)
     {
-      chooser.setDialogTitle("Open")
+      addFileTab(file)
+    }
+    else
+    {
+      chooser.dialogTitle = "Open"
       int choice = chooser.showOpenDialog(frame)
       if (choice == JFileChooser.APPROVE_OPTION)
       {
-        File[] files = chooser.getSelectedFiles()
-        files.each { File f ->
+        chooser.selectedFiles.each { File f ->
           rememberChooserDirectory(f)
           addFileTab(f)
         }
       }
     }
-    else
-    {
-      addFileTab(file)
-    }
   }
 
   void setupMenuBar()
   {
-    def newAction = new GAction("New", KeyEvent.VK_N, KeyStroke.getKeyStroke(KeyEvent.VK_N, GSwing.CMD_MASK), this.&newFile)
+    def newAction = swing.action(name: "New", mnemonic: 'N', accelerator: swing.shortcut('N'),
+            closure: { newFile() })
 
-    def openAction = new GAction("Open", KeyEvent.VK_O, KeyStroke.getKeyStroke(KeyEvent.VK_O, GSwing.CMD_MASK), this.&openFile)
-    def saveAction = new GAction("Save", KeyEvent.VK_S, KeyStroke.getKeyStroke(KeyEvent.VK_S, GSwing.CMD_MASK), {
-      File file = fileForEditor((JComponent) editorTabs.getSelectedComponent())
-      if (file == null)
+    def openAction = swing.action(name: "Open", mnemonic: 'O', accelerator: swing.shortcut('O'),
+            closure: { openFile() } )
+    def saveAction = swing.action(name: "Save", mnemonic: 'S', accelerator: swing.shortcut('S'),
+            closure: {
+      File file = fileForEditor((JComponent) editorTabs.selectedComponent)
+      if (!file)
       {
-        chooser.setDialogTitle("Save")
+        chooser.dialogTitle = "Save"
         int choice = chooser.showSaveDialog(frame)
         if (choice == JFileChooser.APPROVE_OPTION)
         {
-          file = chooser.getSelectedFile()
+          file = chooser.selectedFile
           rememberChooserDirectory(file)
         }
         else
@@ -356,114 +335,105 @@ class MainPane extends JPanel
       }
       file.write(getScriptText())
     })
-    def saveAsAction = new GAction("Save As", KeyEvent.VK_A, KeyStroke.getKeyStroke(KeyEvent.VK_S,
-            GSwing.CMD_MASK + KeyEvent.SHIFT_MASK), {
-      chooser.setDialogTitle("Save As")
+    def saveAsAction = swing.action(name: "Save As", mnemonic: 'A', accelerator: swing.shortcut('shift S'),
+            closure: {
+      chooser.dialogTitle = "Save As"
       int choice = chooser.showSaveDialog(frame)
       if (choice == JFileChooser.APPROVE_OPTION)
       {
-        File file = chooser.getSelectedFile()
+        File file = chooser.selectedFile
         file.write(getScriptText())
-        editorTabs.setTitleAt(editorTabs.getSelectedIndex(), file.getName());
-        associateFileToEditor((JComponent) editorTabs.getSelectedComponent(), file)
+        editorTabs.setTitleAt(editorTabs.selectedIndex, file.name)
+        associateFileToEditor((JComponent) editorTabs.selectedComponent, file)
         rememberChooserDirectory(file)
       }
     })
-    def closeAction = new GAction("Close", KeyEvent.VK_C, KeyStroke.getKeyStroke(KeyEvent.VK_W, GSwing.CMD_MASK), {
-      removeAssociation((JComponent) editorTabs.getSelectedComponent())
-      editorTabs.removeTabAt(editorTabs.getSelectedIndex())
-    })
-    def quitAction = new GAction("Exit", KeyEvent.VK_X, KeyStroke.getKeyStroke(KeyEvent.VK_Q, GSwing.CMD_MASK), {
-      saveSettings()
-      System.exit(0)
-    })
+    def closeAction = swing.action(name: "Close", mnemonic: 'C', accelerator: swing.shortcut('W'),
+            closure: {
+              removeAssociation((JComponent) editorTabs.selectedComponent)
+              editorTabs.removeTabAt(editorTabs.selectedIndex)
+            })
+    def quitAction = swing.action(name: "Exit", mnemonic: 'x', accelerator: swing.shortcut('Q'),
+            closure: {
+              saveSettings()
+              System.exit(0)
+            })
 
-    recentDocsSubMenu = new JMenu("Recent Documents")
-    recentDocsSubMenu.setMnemonic('D' as char)
+    recentDocsSubMenu = swing.menu('Recent Documents', mnemonic: 'D')
     // this is kind of wasteful.  but it's simple.
-    recentDocsSubMenu.getPopupMenu().addPopupMenuListener([
+    recentDocsSubMenu.popupMenu.addPopupMenuListener([
             popupMenuWillBecomeVisible : { rebuildRecentDocsSubMenu() },
             popupMenuWillBecomeInvisible : {},
             popupMenuCanceled : {}
          ] as PopupMenuListener)
 
-    JMenu fileMenu = new JMenu("File")
-    fileMenu.setMnemonic('F' as char)
-    fileMenu.add(newAction)
-    fileMenu.add(openAction)
-    fileMenu.add(recentDocsSubMenu)
-    fileMenu.add(saveAction)
-    fileMenu.add(saveAsAction)
-    fileMenu.add(closeAction)
-    fileMenu.add(quitAction)
-
-    def runScriptAction = new GAction("Run", KeyEvent.VK_R, KeyStroke.getKeyStroke(KeyEvent.VK_R, GSwing.CMD_MASK), {
-      execute(currentScriptEditor().getText())
-    })
-    def runSelectedAction = new GAction("Run Selection", KeyEvent.VK_E, KeyStroke.getKeyStroke(KeyEvent.VK_R, GSwing.CMD_MASK
-            + KeyEvent.SHIFT_MASK), {
-      execute(currentScriptEditor().getSelectedText())
-    })
-
-    def decreaseFontAction = new GAction("Decrease font", KeyEvent.VK_I,
-      KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, GSwing.CMD_MASK), this.&changeFontSize.curry(false))
-    def increaseFontAction = new GAction("Increase font", KeyEvent.VK_D,
-      KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, GSwing.CMD_MASK), this.&changeFontSize.curry(true))
-
-    JMenu scriptMenu = new JMenu("Script")
-    scriptMenu.setMnemonic('S' as char)
-    scriptMenu.add(runScriptAction)
-    scriptMenu.add(runSelectedAction)
-    scriptMenu.add(decreaseFontAction)
-    scriptMenu.add(increaseFontAction)
-
-    def clearConsoleAction = new GAction("Clear Console", KeyEvent.VK_C,
-            KeyStroke.getKeyStroke(KeyEvent.VK_K, GSwing.CMD_MASK), {
-              cPane.clear()
-            })
-
-    JMenu outputMenu = new JMenu("Output")
-    outputMenu.setMnemonic('O' as char)
-    outputMenu.add(clearConsoleAction)
-
-    def newShellAction = new GAction("New Shell", KeyEvent.VK_N, null, turtleCanvas.&newShell)
-
-    JMenu debugMenu = new JMenu("Debug")
-    debugMenu.setMnemonic('D' as char)
-    debugMenu.add(newShellAction)
+    def runScriptAction = swing.action(name: "Run", mnemonic: 'R', accelerator: swing.shortcut('R'),
+            closure: { execute(currentScriptEditor().text) })
     
-    def aboutAction = new GAction("About GTurtle", KeyEvent.VK_A, null, {
-      aboutDlg.setVisible(true)
-            })
+    def runSelectedAction = swing.action(name: "Run Selection", mnemonic: 'e', accelerator:  swing.shortcut('shift R'),
+            closure: { execute(currentScriptEditor().selectedText) })
 
-    JMenu helpMenu = new JMenu("Help")
-    helpMenu.setMnemonic('H' as char)
-    helpMenu.add(aboutAction)
+    def decreaseFontAction = swing.action(name: "Decrease font", mnemonic: 'D',
+            accelerator: KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, CMD_MASK),
+            closure: { changeFontSize(false) })
+    def increaseFontAction = swing.action(name: "Increase font", mnemonic: 'I',
+            accelerator: KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, CMD_MASK),
+            closure: { changeFontSize(true) })
 
-    JMenuBar menuBar = new JMenuBar()
-    menuBar.add(fileMenu)
-    menuBar.add(scriptMenu)
-    menuBar.add(outputMenu)
-    menuBar.add(debugMenu)
-    menuBar.add(helpMenu)
-    frame.setJMenuBar(menuBar)
+    def clearConsoleAction = swing.action(name: "Clear Console", mnemonic: 'C', accelerator:  swing.shortcut('K'),
+            closure: { cPane.clear() })
+
+    def newShellAction = swing.action(name:  "New Shell", mnemonic: 'N', closure: { turtleCanvas.newShell() })
+
+    def aboutAction = swing.action(name: "About GTurtle", mnemonic: 'A', closure: { aboutDlg.visible = true })
+
+    frame.JMenuBar = swing.menuBar {
+      menu(text: 'File', mnemonic: 'F') {
+        menuItem(newAction)
+        menuItem(openAction)
+        menu(recentDocsSubMenu)
+        menuItem(saveAction)
+        menuItem(saveAsAction)
+        menuItem(closeAction)
+        separator()
+        menuItem(quitAction)
+      }
+      menu(text: 'Script', mnemonic: 'S') {
+        menuItem(runScriptAction)
+        menuItem(runSelectedAction)
+        menuItem(decreaseFontAction)
+        menuItem(increaseFontAction)
+      }
+      menu(text: 'Output', mnemonic: 'O') {
+        menuItem(clearConsoleAction)
+      }
+      menu(text: 'Debug', mnemonic: 'D') {
+        menuItem(newShellAction)
+      }
+      menu(text: 'Help', mnemonic: 'H') {
+        menuItem(aboutAction)
+      }
+    }
   }
 
   void rebuildRecentDocsSubMenu()
   {
     recentDocsSubMenu.removeAll()
     recentDocs.eachWithIndex { File file, int i ->
-      def action = new GAction("${i+1}. ${file.getName()}", KeyEvent.VK_1+i, null, this.&openFile.curry(file))
+      def action = swing.action(name: "${i+1}. ${file.name}".toString(),
+              mnemonic: KeyEvent.VK_1+i, closure: { openFile(file) })
       recentDocsSubMenu.add(action)
     }
   }
 
   void changeFontSize(boolean up)
   {
-    Font currentFont = currentScriptEditor().getFont()
+    JEditorPane scriptEditor = currentScriptEditor()
+    Font currentFont = scriptEditor.font
     float newSize = currentFont.size + (up ? 1 : -1) 
     Font font = currentFont.deriveFont(newSize)
-    currentScriptEditor().setFont(font)
+    scriptEditor.font = font
+    revalidate(); repaint();
   }
 
   void setupAboutDlg()
@@ -476,31 +446,31 @@ class MainPane extends JPanel
             {
               label('GTurtle, by Eitan Suez (eitan.suez@gmail.com)')
               button(text: 'Ok', actionPerformed: {
-                aboutDlg.setVisible(false)
-                currentScriptEditor().requestFocusInWindow()
+                aboutDlg.visible = false
+                focusOnEditor()
               })
             }
-    ((JComponent) aboutDlg.getContentPane()).setBorder(new EmptyBorder(10,10,10,10))
+    ((JComponent) aboutDlg.contentPane).border = new EmptyBorder(10,10,10,10)
     aboutDlg.pack()
-    aboutDlg.setLocationRelativeTo(frame)
+    aboutDlg.locationRelativeTo = frame
   }
 
 
   JEditorPane currentScriptEditor()
   {
-    return (JEditorPane) scrollPaneContents((JScrollPane) editorTabs.getSelectedComponent())
+    return (JEditorPane) scrollPaneContents((JScrollPane) editorTabs.selectedComponent)
   }
   JComponent scrollPaneContents(JScrollPane scrollPane)
   {
-    return (JComponent) scrollPane.getViewport().getView()
+    return (JComponent) scrollPane.viewport.view
   }
 
   void setScriptText(String scriptText)
   {
-    GSwing.doLater { currentScriptEditor().setText(scriptText) }
+    swing.doLater { currentScriptEditor().text = scriptText }
   }
 
-  String getScriptText() { currentScriptEditor().getText() }
+  String getScriptText() { currentScriptEditor().text }
 
   // some magical recipe i discovered works for setting up JSyntaxPane
   JScrollPane newScriptEditor()
@@ -508,13 +478,13 @@ class MainPane extends JPanel
     JEditorPane scriptEditor = new JEditorPane()
     JScrollPane editorScrollPane = new JScrollPane(scriptEditor)
 
-    scriptEditor.setPreferredSize(new Dimension(450, 400))
-    scriptEditor.setCaretColor(Color.black)
-    scriptEditor.setContentType("text/groovy")
+    scriptEditor.preferredSize = new Dimension(450, 400)
+    scriptEditor.caretColor = black
+    scriptEditor.contentType = "text/groovy"
 
     DefaultSyntaxKit.initKit()
-    scriptEditor.setContentType("text/groovy")
-    scriptEditor.setFont(new Font("sansserif", Font.PLAIN, 12))
+    scriptEditor.contentType = "text/groovy"
+    scriptEditor.font = new Font("sansserif", Font.PLAIN, 12)
 
     return editorScrollPane
   }
@@ -524,7 +494,7 @@ class State
 {
   TVector v = new TVector(x:0, y:0)
   boolean pendown = true
-  Color pencolor = Color.black
+  Color pencolor = black
   float pensize = 1.0f
 }
 
@@ -563,12 +533,12 @@ class Turtle implements MouseListener, MouseMotionListener
   public void mouseClicked(MouseEvent e) { }
   public void mousePressed(MouseEvent e)
   {
-    int w = sprite.getIconWidth()
-    int h = sprite.getIconHeight()
-    TVector pos = getPos();
+    int w = sprite.iconWidth
+    int h = sprite.iconHeight
+    TVector pos = getPos()
     Point translated = new Point((int) (pos.x+250), (int) (-pos.y+250))
     Rectangle spriteSpace = new Rectangle((int) (translated.x-w/2), (int) (translated.y-h/2), w, h)
-    if (spriteSpace.contains(e.getPoint()))
+    if (spriteSpace.contains(e.point))
     {
       indragmode = true
     }
@@ -581,7 +551,7 @@ class Turtle implements MouseListener, MouseMotionListener
   {
     if (indragmode)
     {
-      Point converted = new Point((int) (e.getX()-250), (int) ((e.getY()-250)*-1))
+      Point converted = new Point((int) (e.x-250), (int) ((e.y-250)*-1))
       setPos(converted.x, converted.y)
       canvas.repaint()
     }
@@ -635,7 +605,7 @@ class Turtle implements MouseListener, MouseMotionListener
   protected void wrap(TVector v1, TVector v2)
   {
     states << new State(v: v2, pendown: state.pendown, pencolor: state.pencolor, pensize: state.pensize)
-    TVector screen = new TVector(x: canvas.getWidth(), y: canvas.getHeight())
+    TVector screen = new TVector(x: canvas.width, y: canvas.height)
     TVector nextV = (v2.translate(250) % screen).translate(-250)
     if (nextV != v2)
     {
@@ -677,7 +647,7 @@ class Turtle implements MouseListener, MouseMotionListener
 
   private double heading_rads()
   {
-    Math.atan(heading_v.y/heading_v.x) + ((heading_v.x>=0) ? 0 : Math.PI);
+    Math.atan(heading_v.y/heading_v.x) + ((heading_v.x>=0) ? 0 : Math.PI)
   }
   double getHeading()
   {
@@ -698,8 +668,8 @@ class Turtle implements MouseListener, MouseMotionListener
     states.tail().each { State s2 ->
       if (s2.pendown)
       {
-        g2.setColor(s2.pencolor)
-        g2.setStroke(new BasicStroke(s2.pensize))
+        g2.color = s2.pencolor
+        g2.stroke = new BasicStroke(s2.pensize)
         g2.drawLine((int) s1.v.x, (int) s1.v.y, (int) s2.v.x, (int) s2.v.y)
       }
       s1 = s2
@@ -716,8 +686,8 @@ class Turtle implements MouseListener, MouseMotionListener
     g2.rotate(theta)
 
     g2.rotate(Math.PI/2)
-    g2.drawImage(sprite.getImage(),
-            (int) (-sprite.getIconWidth()/2.0), (int) (-sprite.getIconHeight()/2.0), null)
+    g2.drawImage(sprite.image,
+            (int) (-sprite.iconWidth/2.0), (int) (-sprite.iconHeight/2.0), null)
     g2.rotate(-Math.PI/2)
 
     g2.rotate(-theta)
@@ -729,9 +699,10 @@ class Turtle implements MouseListener, MouseMotionListener
 
 class TurtleCanvas extends JComponent
 {
-  static ImageIcon turtlesprite, bugsprite;
+  static ImageIcon turtlesprite
+  static ImageIcon bugsprite
   static {
-    ClassLoader loader = Thread.currentThread().getContextClassLoader()
+    ClassLoader loader = Thread.currentThread().contextClassLoader
     URL url = loader.getResource("gturtle/kturtle.png")
     URL bugurl = loader.getResource("gturtle/bug_red.png")
     turtlesprite = new ImageIcon(url)
@@ -785,13 +756,13 @@ class TurtleCanvas extends JComponent
     Graphics2D g2 = (Graphics2D) g
     g2.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON)
 
-    g2.setColor(Color.white)
+    g2.color = white
     g2.fillRect(0, 0, getWidth()-1, getHeight()-1)
     
     g2.translate(250, 250)
     g2.scale(1.0, -1.0)
 
-    if(gridOn)
+    if (gridOn)
     {
       drawCoordinateGrid(g2)
     }
@@ -823,28 +794,21 @@ class TurtleCanvas extends JComponent
     Color axisColor = new Color(0xCD, 0x51, 0x5C, 0x80)
     int minorStep = 50
     (-240..240).step(10, { int i ->
-      if (i==0)
-      {
-        g2.setColor(axisColor)
-      }
-      else
-      {
-        g2.setColor(lineColor)
-      }
+      g2.color = (i==0) ? axisColor : lineColor
       boolean minor = (i % minorStep == 0)
-      g2.setStroke(minor ? minorStroke : thinStroke)
+      g2.stroke = minor ? minorStroke : thinStroke
       g2.drawLine(i, -250, i, 250)
       g2.drawLine(-250, i, 250, i)
     })
   }
 
   Dimension preferredSize = new Dimension(500,500)
-  Dimension getPreferredSize() { preferredSize; }
+  Dimension getPreferredSize() { preferredSize }
 
   synchronized void execute(String scriptText)
   {
     turtles = []
-    Date start = new Date();
+    Date start = new Date()
 
     // a nicety.. (there's probably another way to tell the script to pre-import packages..)
     scriptText = "import static java.awt.Color.*\n" +
@@ -856,12 +820,12 @@ class TurtleCanvas extends JComponent
     }
     catch (Exception ex)
     {
-      def msg = ex.getCause() ? ex.getCause().getMessage() : ex.getMessage()
+      def msg = ex.cause ? ex.cause.getMessage() : ex.getMessage()
       System.err.println msg
     }
 
-    Date end = new Date();
-    long time_ms = end.getTime() - start.getTime()
+    Date end = new Date()
+    long time_ms = end.time - start.time
     System.out.println "[time: ${time_ms} ms]"
     repaint()
   }
@@ -894,10 +858,10 @@ class TVector
   TVector perp() { new TVector(x: -y, y: x) }
   TVector translate(double amt) { new TVector(x: x + amt, y: y+amt) }
 
-  double equalsMargin = 0.000001;
+  double equalsMargin = 0.000001
   public boolean equals(Object obj)
   {
-    if (obj == null || (!obj instanceof TVector)) return false
+    if (!obj || (!obj instanceof TVector)) return false
     TVector other = (TVector) obj
     return Math.abs(x - other.x) < equalsMargin && Math.abs(y - other.y) < equalsMargin
   }
@@ -908,7 +872,7 @@ class TVector
 
   public String toString()
   {
-    return "{${x}, ${y}}";
+    return "{${x}, ${y}}"
   }
 
 }
