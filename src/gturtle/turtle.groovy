@@ -105,7 +105,17 @@ class MainPane extends JPanel
 {
 
   static int CMD_MASK = java.awt.Toolkit.defaultToolkit.menuShortcutKeyMask
-  static String initText = "t = newturtle('bug')\n\n5.times { t.fd 100; t.rt 144 }\n"
+  static String initText = """
+t = newturtle('bug')
+
+t.setPenColor blue
+t.setPenSize 5
+
+5.times { t.fd 100; t.rt 144 }
+
+t.setPos(-100,0)
+"""
+
 
   SwingBuilder swing
   JTabbedPane editorTabs
