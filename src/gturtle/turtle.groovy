@@ -20,7 +20,6 @@ import groovy.swing.SwingBuilder
  * User: Eitan Suez
  * Date: Nov 17, 2008
  */
-
 class TurtleConsole extends JFrame implements Runnable
 {
   static String APP_TITLE = "Turtle Console"

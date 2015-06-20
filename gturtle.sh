@@ -4,10 +4,10 @@
 
 cwd=`dirname "$0"`
 if [ -z "$GROOVY_HOME" ] ; then
-  GROOVY_HOME="$HOME/work/thirdparty/groovy"
+  GROOVY_HOME="/usr/local/Cellar/groovy/2.4.3/libexec"
 fi
 
-groovyalljar=groovy-all-1.6-beta-2.jar
+groovyalljar=groovy-all-2.4.3.jar
 
 java -classpath $GROOVY_HOME/embeddable/$groovyalljar:$cwd/lib/jsyntaxpane-0.9.3.jar:$cwd/out gturtle.TurtleConsole
 # alternative:
