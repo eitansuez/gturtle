@@ -1,0 +1,15 @@
+apply plugin: 'groovy'
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  compile 'org.codehaus.groovy:groovy-all:2.4.3'
+  compile files('lib/jsyntaxpane-0.9.3.jar')
+}
+
+task run(type: JavaExec, dependsOn: 'build') {
+  classpath = sourceSets.main.runtimeClasspath
+  main = 'gturtle.TurtleConsole'
+}

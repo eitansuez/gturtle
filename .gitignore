@@ -1,3 +1,7 @@
 *.iml
 .idea
+build
+.gradle
+dist
 out
+

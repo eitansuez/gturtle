@@ -1,9 +1,10 @@
 <project name="GTurtle" default="run">
 
- <description>Contact Manager Demo Application</description>
+ <description>GTurtle</description>
 
  <property name="build.classes.dir" value="out" />
- <property name="src.dir" location="src" />
+ <property name="src.dir" location="src/main/groovy" />
+ <property name="resource.dir" location="src/main/resources" />
  <property name="lib.dir" location="lib" />
  <property name="lib.tools.dir" location="toolslib" />
  <property name="dist.dir" value="dist" />
@@ -38,13 +39,12 @@
    </groovyc>
     
    <copy todir="${build.classes.dir}">
-      <fileset dir="${src.dir}" includes="**/*.png" />
+      <fileset dir="${resource.dir}" includes="**/*.png" />
    </copy>
  </target>
  
  <target name="run" description="run app" depends="compile">
-   <java classname="${main.class}" classpathref="class.path" 
-         fork="true" maxmemory="192m" />
+   <java classname="${main.class}" classpathref="class.path" fork="true" maxmemory="192m" />
  </target>
 
  <target name="jar" description="jar it" depends="clean,compile">
